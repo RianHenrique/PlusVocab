@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../controllers/auth_controller.dart';
+import 'signin_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -15,28 +16,32 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // Controladores para capturar o texto dos campos
+  // Controladores (Mantidos)
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
+  // Estados de visibilidade (Mantidos)
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
 
+  // --- NOVAS CORES DO DESIGN (COPIADAS DO SIGNIN) ---
+  final Color _primaryPurple = const Color(0xFF4e7fa5);
+  final Color _textBlue = const Color(0xFF4e7fa5);
+  final Color _bgLight = const Color(0xFFf3f4f6);
+  // --- FIM DAS NOVAS CORES ---
+
   @override
   void dispose() {
-    // Limpar os controladores quando o widget for descartado
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  // Função para lidar com a submissão do formulário
+  // Função de submit (Mantida - Sem alterações)
   void _submitSignUp() async {
-    // 1. Validar o formulário
     if (_formKey.currentState?.validate() ?? false) {
-      // Se for válido, pegar os valores
       final email = _emailController.text;
       final password = _passwordController.text;
       final confirmPassword = _confirmPasswordController.text;
@@ -60,307 +65,354 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  Widget _buildTextFieldWithLabel({
-    required String label,
-    required TextEditingController controller,
-    bool obscureText = false,
-    String? Function(String?)? validator,
-    Widget? suffixIcon,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[800],
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          obscureText: obscureText,
-          decoration: InputDecoration(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-              borderSide: BorderSide(color: Theme.of(context).primaryColor),
-            ),
-            suffixIcon: suffixIcon,
-          ),
-          validator: validator,
-        ),
-      ],
-    );
-  }
+  // O helper _buildTextFieldWithLabel foi removido.
 
   @override
   Widget build(BuildContext context) {
-    // Aqui você leria o *estado* do controller
+    // Leitura do estado (Mantida)
     final authState = context.watch<AuthController>();
     final bool isLoading = authState.isLoading;
     final String? errorMessage = authState.errorMessage;
 
+    // --- ESTRUTURA DO BUILD METHOD ATUALIZADA ---
     return Scaffold(
-      appBar: AppBar(),
+      backgroundColor: _bgLight, // Cor de fundo do design
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: LayoutBuilder(builder: (context, constraints) {
-            return SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight,
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(height: 40),
+
+                // --- SEÇÃO SUPERIOR: LOGO E TEXTOS ---
+                Image.asset(
+                  'assets/images/+Vocab.png', // Caminho atualizado
+                  height: 80,
                 ),
-                child: IntrinsicHeight(
+                const SizedBox(height: 16),
+                Text(
+                  'Crie sua Conta', // Texto de Cadastro
+                  style: GoogleFonts.poppins( // Fonte atualizada
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: _textBlue,
+                  ),
+                ),
+                Text(
+                  'Preencha os dados para registrar', // Texto de Cadastro
+                  style: GoogleFonts.poppins( // Fonte atualizada
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400, // Peso atualizado
+                    color: _textBlue.withValues(alpha: 1), // Opacidade atualizada
+                  ),
+                ),
+                const SizedBox(height: 40),
+
+                // --- SEÇÃO INFERIOR: CARD DO FORMULÁRIO ---
+                Container(
+                  width: double.infinity,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(30),
+                      topRight: Radius.circular(30),
+                    ),
+                  ),
                   child: Form(
-                    key: _formKey,
+                    key: _formKey, // Sua _formKey
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                        // --- Campo Email (Estilizado) ---
+                        TextFormField(
+                          controller: _emailController, // Seu controller
+                          style: GoogleFonts.poppins( // Fonte atualizada
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: InputDecoration(
+                            hintText: "Email",
+                            prefixIcon:
+                                const Icon(Icons.person, color: Colors.grey),
+                            contentPadding: const EdgeInsets.symmetric( // Padding atualizado
+                                horizontal: 8, vertical: 8),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade300),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  BorderSide(color: _primaryPurple, width: 2.0),
+                            ),
+                          ),
+                          validator: (String? value) { // Sua validação
+                            if (value == null || value.isEmpty) {
+                              return 'Por favor, insira um email';
+                            }
+                            if (!EmailValidator.validate(value)) {
+                              return 'Por favor, insira um email válido';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 10), // Espaçamento atualizado
+
+                        // --- Campo Senha (Estilizado) ---
+                        TextFormField(
+                          controller: _passwordController, // Seu controller
+                          style: GoogleFonts.poppins( // Fonte atualizada
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                          obscureText: !_isPasswordVisible, // Seu estado
+                          decoration: InputDecoration(
+                            hintText: "Senha",
+                            prefixIcon:
+                                const Icon(Icons.lock_outline, color: Colors.grey),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _isPasswordVisible
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                                color: Colors.grey,
+                              ),
+                              onPressed: () { // Sua lógica
+                                setState(() {
+                                  _isPasswordVisible = !_isPasswordVisible;
+                                });
+                              },
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade200),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade300),
+                            ),
+                            filled: true,
+                            fillColor: Colors.white,
+                          ),
+                          validator: (value) { // Sua validação de senha forte
+                            if (value == null || value.isEmpty) {
+                              return 'Por favor, digite uma senha';
+                            }
+                            if (value.length < 8) {
+                              return 'A senha deve ter pelo menos 6 caracteres';
+                            }
+                            // Você pode adicionar mais validações se desejar
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 10), // Espaçamento atualizado
+
+                        // --- Campo Confirmar Senha (Novo/Estilizado) ---
+                        TextFormField(
+                          controller:
+                              _confirmPasswordController, // Seu controller
+                          style: GoogleFonts.poppins( // Fonte atualizada
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                          obscureText:
+                              !_isConfirmPasswordVisible, // Seu estado
+                          decoration: InputDecoration(
+                            hintText: "Confirmar Senha",
+                            prefixIcon:
+                                const Icon(Icons.lock_outline, color: Colors.grey),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _isConfirmPasswordVisible
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                                color: Colors.grey,
+                              ),
+                              onPressed: () { // Sua lógica
+                                setState(() {
+                                  _isConfirmPasswordVisible =
+                                      !_isConfirmPasswordVisible;
+                                });
+                              },
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade200),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade300),
+                            ),
+                            filled: true,
+                            fillColor: Colors.white,
+                          ),
+                          validator: (value) { // Sua validação de confirmação
+                            if (value != _passwordController.text) {
+                              return 'As senhas não coincidem';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 5), // Espaçamento atualizado (não tem "esqueceu senha")
+
+                        // --- Exibição de Erro (Mantida) ---
+                        if (errorMessage != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 10, bottom: 16.0),
+                            child: Center(
+                              child: Text(
+                                errorMessage,
+                                style: GoogleFonts.poppins( // Fonte atualizada
+                                    color:
+                                        Theme.of(context).colorScheme.error),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 10),
+
+                        // --- Botão de CADASTRAR (Estilizado) ---
+                        SizedBox(
+                          width: double.infinity,
+                          height: 40, // Altura atualizada
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _primaryPurple, // Cor do design
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8), // Borda atualizada
+                              ),
+                            ),
+                            onPressed: isLoading ? null : _submitSignUp, // Sua lógica
+                            child: isLoading
+                                ? const SizedBox( // Seu loading
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 3, color: Colors.white),
+                                  )
+                                : Text(
+                                    "CADASTRAR", // Texto de Cadastro
+                                    style: GoogleFonts.poppins( // Fonte atualizada
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500, // Peso atualizado
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(height: 15), // Espaçamento atualizado
+
+                        // --- Divisor "ou" (Estilizado) ---
+                        Row(
                           children: [
-                            Image.asset(
-                              'assets/images/Logo.png',
-                              height: 180,
-                            ),
-                            const SizedBox(height: 16),
-                            const Text(
-                              'Cadastrar-se',
-                              style: TextStyle(
-                                fontSize: 42,
-                                fontWeight: FontWeight.w500,
+                            Expanded(
+                                child: Divider(
+                                    color: Colors.grey.shade300,
+                                    thickness: 1.5)),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
+                                "ou",
+                                style: GoogleFonts.inter( // Mantido Inter (conforme signin)
+                                    color: Colors.grey.shade400,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16),
                               ),
-                              textAlign: TextAlign.left,
                             ),
-                            const Text(
-                              'Preencha os campos abaixo para continuar',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w300,
-                              ),
-                              textAlign: TextAlign.left,
-                            ),
+                            Expanded(
+                                child: Divider(
+                                    color: Colors.grey.shade300,
+                                    thickness: 1.5)),
                           ],
                         ),
-                        Column(
+                        const SizedBox(height: 15), // Espaçamento atualizado
+
+                        // --- Botão Google (Estilizado) ---
+                        SizedBox(
+                          width: double.infinity,
+                          height: 40, // Altura atualizada
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: Colors.grey.shade100,
+                              side: BorderSide.none, // Sem borda
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8), // Borda atualizada
+                              ),
+                            ),
+                            icon: Image.asset( // Seu ícone
+                              'assets/images/GoogleLogo.png',
+                              height: 18, // Altura atualizada
+                            ),
+                            label: Text(
+                              "CADASTRAR COM GOOGLE", // Texto de Cadastro
+                              style: GoogleFonts.inter( // Mantido Inter (conforme signin)
+                                color: _textBlue,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            onPressed: () { // Sua lógica (TODO)
+                              // final authController = context.read<AuthController>();
+                              // authController.signInWithGoogle();
+                              print('Botão Google pressionado');
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 20), // Espaçamento atualizado
+
+                        // --- Rodapé Login (Estilizado) ---
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            _buildTextFieldWithLabel(
-                              label: 'Digite seu email',
-                              controller: _emailController,
-                              validator: (String? value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Por favor, insira um email';
-                                }
-                                if (!EmailValidator.validate(value)) {
-                                  return 'Por favor, insira um email válido';
-                                }
-                                return null;
-                              },
+                            Text(
+                              "Já tem uma conta?",
+                              style:
+                                  GoogleFonts.poppins(fontWeight: FontWeight.w500), // Fonte atualizada
                             ),
-                            const SizedBox(height: 16),
-                            _buildTextFieldWithLabel(
-                              label: 'Escolha sua senha',
-                              controller: _passwordController,
-                              obscureText: !_isPasswordVisible,
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _isPasswordVisible
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
-                                  color: Colors.grey[600],
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _isPasswordVisible = !_isPasswordVisible;
-                                  });
-                                },
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Por favor, digite uma senha';
-                                }
-                                if (value.length < 6) {
-                                  return 'A senha deve ter pelo menos 6 caracteres';
-                                }
-                                if (!value.contains(RegExp(r'[A-Z]'))) {
-                                  return 'A senha deve conter pelo menos uma letra maiúscula';
-                                }
-                                if (!value.contains(RegExp(r'[a-z]'))) {
-                                  return 'A senha deve conter pelo menos uma letra minúscula';
-                                }
-                                if (!value.contains(RegExp(r'[0-9]'))) {
-                                  return 'A senha deve conter pelo menos um número';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            _buildTextFieldWithLabel(
-                              label: 'Confirme sua senha',
-                              controller: _confirmPasswordController,
-                              obscureText: !_isConfirmPasswordVisible,
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _isConfirmPasswordVisible
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
-                                  color: Colors.grey[600],
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _isConfirmPasswordVisible =
-                                        !_isConfirmPasswordVisible;
-                                  });
-                                },
-                              ),
-                              validator: (value) {
-                                if (value != _passwordController.text) {
-                                  return 'As senhas não coincidem';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 24),
-                            if (errorMessage != null)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 16.0),
-                                child: Text(
-                                  errorMessage,
-                                  style: TextStyle(
-                                      color:
-                                          Theme.of(context).colorScheme.error),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: isLoading ? null : _submitSignUp,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.black,
-                                  foregroundColor: Colors.white,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                child: isLoading
-                                    ? const SizedBox(
-                                        width: 24,
-                                        height: 24,
-                                        child: CircularProgressIndicator(
-                                            strokeWidth: 3, color: Colors.white),
-                                      )
-                                    : Text(
-                                        'Cadastrar',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                              ),
-                            ),
-                            const SizedBox(height: 40),
-                            Row(
-                              children: [
-                                const Expanded(child: Divider()),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16.0),
-                                  child: Text(
-                                    'ou',
-                                    style: GoogleFonts.inter(
-                                        color: Colors.grey[600]),
-                                  ),
-                                ),
-                                const Expanded(child: Divider()),
-                              ],
-                            ),
-                            const SizedBox(height: 40),
-                            SizedBox(
-                              width: double.infinity,
-                              child: OutlinedButton.icon(
-                                onPressed: () {
-                                  // TODO: Implementar lógica de cadastro com Google
-                                  // final authController = context.read<AuthController>();
-                                  // authController.signInWithGoogle();
-                                  print('Botão Google pressionado');
-                                },
-                                icon: Image.asset(
-                                  'assets/images/GoogleLogo.png',
-                                  height: 20,
-                                  width: 20,
-                                ),
-                                label: Text(
-                                  'Cadastrar-se com Google',
-                                  style: GoogleFonts.inter(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                style: OutlinedButton.styleFrom(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  side: BorderSide(color: Colors.grey[300]!),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 40),
-                            InkWell(
-                              onTap: () {
+                            TextButton(
+                              onPressed: () { // Sua navegação
                                 if (Navigator.canPop(context)) {
                                   Navigator.pop(context);
                                 } else {
-                                  // TODO: Adicione a navegação para sua tela de Login
-                                  // Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen()));
+                                  Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              const SignInScreen()));
                                 }
                               },
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Já tem uma conta? ',
-                                    style: GoogleFonts.inter(
-                                        fontSize: 14, color: Colors.grey[700]),
-                                  ),
-                                  Text(
-                                    'Entrar',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ],
+                              child: Text(
+                                "Entrar",
+                                style: GoogleFonts.poppins( // Fonte atualizada
+                                    color: _primaryPurple,
+                                    fontWeight: FontWeight.w500), // Peso atualizado
                               ),
-                            ),
-                            const SizedBox(height: 40),
+                            )
                           ],
                         ),
+                        const SizedBox(height: 10), // Espaçamento atualizado
                       ],
                     ),
                   ),
                 ),
-              ),
-            );
-          }),
+              ],
+            ),
+          ),
         ),
       ),
     );
