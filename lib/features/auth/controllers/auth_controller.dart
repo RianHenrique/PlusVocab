@@ -2,9 +2,11 @@ import 'package:flutter/foundation.dart';
 import '../models/auth_service.dart';
 import '../../../core/common_models/user_model.dart';
 
+
 class AuthController extends ChangeNotifier {
   
   final AuthService _authService;
+  
 
   AuthController(this._authService);
 
@@ -39,7 +41,30 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  // Você adicionaria outras funções aqui
-  // Future<void> login({required String email, required String password}) async { ... }
-  // Future<void> logout() async { ... }
+  Future<void> signIn({
+    required String email, 
+    required String password
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      
+      _currentUser = await _authService.signIn(email: email, password: password);
+      debugPrint('Usuário logado com sucesso: $_currentUser');
+
+    } catch (e) {
+      _errorMessage = e.toString();
+
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> logout() async { 
+    _currentUser = null;
+    notifyListeners();
+  }
 }
