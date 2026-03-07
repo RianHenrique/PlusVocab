@@ -51,7 +51,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         // Define a família de fontes padrão para todo o app
         // O pacote google_fonts cuida do download e cache da fonte.
-        textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
+        textTheme: GoogleFonts.lexendTextTheme(Theme.of(context).textTheme),
       ),
       home: const SignInScreen(),
     );
