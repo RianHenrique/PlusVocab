@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:plus_vocab/features/homePage/views/home_screen.dart';
 
 import 'package:provider/provider.dart';
 import 'features/auth/controllers/auth_controller.dart';
 import 'features/auth/models/auth_service.dart';
-import 'features/auth/views/signin_screen.dart';
+// import 'features/auth/views/signin_screen.dart';
 import 'core/services/api_client.dart';
 
 void main() {
@@ -53,7 +54,7 @@ class MyApp extends StatelessWidget {
         // O pacote google_fonts cuida do download e cache da fonte.
         textTheme: GoogleFonts.lexendTextTheme(Theme.of(context).textTheme),
       ),
-      home: const SignInScreen(),
+      home: const HomeScreen(),
     );
   }
 }
