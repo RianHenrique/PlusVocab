@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import '../controllers/auth_controller.dart';
 
 import 'package:plus_vocab/features/auth/views/signup_screen.dart';
-import 'package:plus_vocab/features/auth/views/recuperar_senha.dart';
+import 'package:plus_vocab/features/auth/views/recuperar_senha_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
