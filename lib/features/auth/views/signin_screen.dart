@@ -7,7 +7,8 @@ import 'package:provider/provider.dart';
 import '../controllers/auth_controller.dart';
 
 import 'package:plus_vocab/features/auth/views/signup_screen.dart';
-import 'package:plus_vocab/features/auth/views/recuperar_senha_screen.dart';
+import 'package:plus_vocab/features/auth/views/recovery_pass_email_screen.dart';
+import 'package:plus_vocab/features/homePage/views/home_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -55,10 +56,7 @@ class _SignInScreenState extends State<SignInScreen> {
       if (authController.errorMessage == null) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            // TODO: Troque pelo seu Widget de Home
-            builder: (context) => const Scaffold(
-                body:
-                    SafeArea(child: Text('Home Screen - Login bem sucedido!'))),
+            builder: (context) => const HomeScreen(),
           ),
         );
       }

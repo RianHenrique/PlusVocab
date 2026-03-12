@@ -1,48 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:email_validator/email_validator.dart';
 import 'package:provider/provider.dart';
 
 import '../controllers/auth_controller.dart';
 
 import 'package:plus_vocab/features/auth/views/signin_screen.dart';
+import 'package:plus_vocab/features/auth/views/reset_pass_screen.dart';
 
-class RecuperarSenhaScreen extends StatefulWidget {
-  const RecuperarSenhaScreen({super.key});
+class RecoveryPassCodeScreen extends StatefulWidget {
+  const RecoveryPassCodeScreen({super.key, required this.email});
+
+  final String email;
 
   @override
-  State<RecuperarSenhaScreen> createState() => _RecuperarSenhaScreenState();
+  State<RecoveryPassCodeScreen> createState() => _RecoveryPassCodeScreenState();
 }
 
-class _RecuperarSenhaScreenState extends State<RecuperarSenhaScreen> {
+class _RecoveryPassCodeScreenState extends State<RecoveryPassCodeScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final _emailController = TextEditingController();
+  final _codeController = TextEditingController();
 
   final Color _blue = const Color(0xFF2563EB);
   final Color _bgLight = const Color(0xFFf3f4f6);
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _codeController.dispose();
     super.dispose();
   }
 
-  void _submitRecuperarSenha() async {
+  void _submitRecoveryCode() async {
     if (_formKey.currentState?.validate() ?? false) {
-      final email = _emailController.text;
-      
+      final code = _codeController.text;
+
       final authController = context.read<AuthController>();
 
-      await Future.delayed(const Duration(seconds: 2)); 
-      debugPrint("Recuperar senha para email: $email");
-
-      // await authController.signUp(
-      //     email: email, password: password, confirmPassword: confirmPassword);
+      final resetToken = await authController.sendRecoveryCode(
+        email: widget.email,
+        code: code
+      );
 
       if (!mounted) return;
 
-      if (authController.errorMessage == null) {}
+      if (authController.errorMessage == null && resetToken != null) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => ResetPassScreen(
+              email: widget.email,
+              resetToken: resetToken,
+            ),
+          ),
+        );
+      }
     }
   }
 
@@ -103,7 +113,7 @@ class _RecuperarSenhaScreenState extends State<RecuperarSenhaScreen> {
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            "Recuperação de senha",
+                            "Digite o código enviado para o seu email",
                             style: GoogleFonts.lexend(
                                 fontSize: 18,
                                 color: _blue,
@@ -114,23 +124,20 @@ class _RecuperarSenhaScreenState extends State<RecuperarSenhaScreen> {
                           height: 5,
                         ),
                         TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
+                          controller: _codeController,
+                          keyboardType: TextInputType.number,
                           style: GoogleFonts.lexend(
                             fontSize: 14,
                           ),
                           decoration: InputDecoration(
-                            labelText: "Insira seu email",
+                            labelText: "Insira o código",
                             labelStyle: GoogleFonts.lexend(
                                 fontSize: 12, fontWeight: FontWeight.w300),
                           ),
                           validator: (String? value) {
                             // Sua validação
                             if (value == null || value.isEmpty) {
-                              return 'Por favor, insira um email';
-                            }
-                            if (!EmailValidator.validate(value)) {
-                              return 'Por favor, insira um email válido';
+                              return 'Por favor, insira o código';
                             }
                             return null;
                           },
@@ -142,7 +149,7 @@ class _RecuperarSenhaScreenState extends State<RecuperarSenhaScreen> {
                           width: double.infinity,
                           height: 40,
                           child: ElevatedButton(
-                            onPressed: isLoading ? null : _submitRecuperarSenha,
+                            onPressed: isLoading ? null : _submitRecoveryCode,
                             style: ElevatedButton.styleFrom(
                                 backgroundColor: _blue,
                                 shape: RoundedRectangleBorder(

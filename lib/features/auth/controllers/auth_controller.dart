@@ -13,6 +13,8 @@ class AuthController extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   User? _currentUser;
+  bool? _emailEnviado;
+  String? _recoveryToken;
 
 
   bool get isLoading => _isLoading;
@@ -53,6 +55,72 @@ class AuthController extends ChangeNotifier {
       
       _currentUser = await _authService.signIn(email: email, password: password);
       debugPrint('Usuário logado com sucesso: $_currentUser');
+
+    } catch (e) {
+      _errorMessage = e.toString();
+
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> sendRecoveryEmail({
+    required String email, 
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      
+      _emailEnviado = await _authService.sendRecoveryEmail(email: email);
+      debugPrint('Email enviado com sucesso: $_emailEnviado');
+
+    } catch (e) {
+      _errorMessage = e.toString();
+
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<String?> sendRecoveryCode({
+    required String email, 
+    required String code
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      
+      _recoveryToken = await _authService.sendRecoveryCode(email: email, code: code);
+      debugPrint('Código enviado com sucesso. O token é: $_recoveryToken');
+      return _recoveryToken;
+
+    } catch (e) {
+      _errorMessage = e.toString();
+      return null;
+
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> resetPassword({
+    required String email, 
+    required String resetToken,
+    required String newPassword
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _authService.resetPassword(email: email, resetToken: resetToken, newPassword: newPassword);
 
     } catch (e) {
       _errorMessage = e.toString();
