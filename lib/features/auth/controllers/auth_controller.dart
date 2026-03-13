@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/auth_service.dart';
 import '../../../core/common_models/user_model.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 
 class AuthController extends ChangeNotifier {
@@ -20,6 +21,23 @@ class AuthController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   User? get currentUser => _currentUser;
+
+  Future<bool> checkAuthStatus() async {
+    final refreshToken = await _authService.storage.getRefreshToken();
+    final userId = await _authService.storage.getUserId();
+    
+    if (refreshToken == null || refreshToken.isEmpty || userId == null || userId.isEmpty) {
+      return false;
+    }
+
+    try {
+      bool authStatus = await _authService.refreshAcessToken();
+      return authStatus;
+    } catch (e) {
+      await _authService.storage.clearAuthData();
+      return false;
+    }
+  }
 
   Future<void> signUp({
     required String email,
@@ -131,8 +149,76 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  Future<void> logout() async { 
-    _currentUser = null;
+  Future<void> signInWithGoogle() async {
+    _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
+
+    // 1. Inicializa a configuração (scopings podem ser adicionados se necessário)
+    GoogleSignIn googleSignIn = GoogleSignIn(
+      serverClientId: "513254980783-0mc882kqo0rdkhtc1qbr4fi3aal8h01o.apps.googleusercontent.com",
+      scopes: ['email'],
+    );
+
+    try {
+      // await googleSignIn.disconnect();
+      // 2. Inicia o processo de login (abre a folha de seleção de conta)
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
+      if (googleUser != null) {
+        // 3. Obtém os detalhes da autenticação
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+        // 4. Aqui estão os tokens que você precisa
+        String? accessToken = googleAuth.accessToken;
+        String? idToken = googleAuth.idToken;
+
+        debugPrint("Access Token: $accessToken");
+        debugPrint("ID Token: $idToken");
+
+        _currentUser = User(
+          id: googleUser.id,
+          email: googleUser.email,
+          accessToken: accessToken!,
+          refreshToken: idToken!,
+        );
+        
+        // Agora você pode enviar esse idToken para o seu backend para validação
+      }
+      if (googleUser == null) {
+        _isLoading = false;
+        notifyListeners();
+      }
+    } catch (e) {
+      _errorMessage = e.toString();
+    }
+    finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> logOut() async { 
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    GoogleSignIn googleSignIn = GoogleSignIn(
+      serverClientId: "513254980783-0mc882kqo0rdkhtc1qbr4fi3aal8h01o.apps.googleusercontent.com",
+    );
+
+    try {
+      await _authService.logOut();
+      debugPrint('Usuário deslogado com sucesso: $_currentUser');
+      _currentUser = null;
+      await googleSignIn.signOut();
+    } catch (e) {
+      _errorMessage = e.toString();
+
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+
   }
 }

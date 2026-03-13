@@ -6,8 +6,45 @@ import '../../../core/services/storage_service.dart';
 class AuthService {
 
   final ApiClient _apiClient;
-  AuthService(this._apiClient);
-  final StorageService _storageService = StorageService();
+  final StorageService _storageService;
+  AuthService(this._apiClient, this._storageService);
+  // final StorageService _storageService = StorageService();
+
+  StorageService get storage => _storageService;
+
+  Future<bool> refreshAcessToken() async {
+    final refreshToken = await _storageService.getRefreshToken();
+    final userId = await _storageService.getUserId();
+
+    try {
+      final response = await _apiClient.post('/auth/refresh', data: {'refreshToken': refreshToken});
+
+      final newAccessToken = response.data['accessToken'];
+
+      await _storageService.saveAuthData(
+        accessToken: newAccessToken,
+        refreshToken: refreshToken!,
+        userId: userId!,
+      );
+
+      return true;
+
+    } catch (e) {
+      if (e is DioException) {
+        // Verifica se a exceção é do Dio
+        if (e.response?.statusCode == 401) {
+          throw 'Refresh inválido ou expirado';
+        } else {
+          // Outro erro do Dio (como 404, 500, etc.)
+          String serverError = e.response?.data?['message'] ?? 'Falha na comunicação com o servidor.';
+          throw serverError; // Lança a String pura
+        }
+      } else {
+        // Erro genérico
+        throw Exception('Falha ao validar acesso: $e');
+      }
+    }
+  }
 
   Future<User> signUp({
     required String email,
@@ -201,6 +238,31 @@ class AuthService {
       } else {
         // Erro genérico
         throw Exception('Falha ao logar: $e');
+      }
+    }
+  }
+
+  Future<void> logOut() async {
+    final refreshToken = await _storageService.getRefreshToken();
+    try {
+      await _apiClient.post('/auth/logout', data: {'refreshToken': refreshToken});
+      await _storageService.clearAuthData();
+    } catch (e) {
+      if (e is DioException) {
+        if (e.response == null){
+          if (e.type == DioExceptionType.connectionTimeout) {
+            throw 'O servidor demorou demais para responder.';
+          } else {
+            throw 'Não foi possível conectar ao servidor. Verifique sua internet.';
+          }
+        } else if (e.response?.statusCode == 401) {
+          throw 'Token de acesso inválido.';
+        } else {
+          String serverError = e.response?.data?['message'] ?? 'Falha na comunicação com o servidor.';
+          throw serverError;
+        }
+      } else {
+        throw Exception('Ocorreu algum erro: $e');
       }
     }
   }

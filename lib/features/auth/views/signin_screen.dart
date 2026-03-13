@@ -38,7 +38,7 @@ class _SignInScreenState extends State<SignInScreen> {
     super.dispose();
   }
 
-  // Função de submit (Mantida - Sem alterações)
+  // signInWithGoogle
   void _submitLogin() async {
     if (_formKey.currentState?.validate() ?? false) {
       final email = _emailController.text;
@@ -60,6 +60,22 @@ class _SignInScreenState extends State<SignInScreen> {
           ),
         );
       }
+    }
+  }
+
+  void signInWithGoogle() async {
+    final authController = context.read<AuthController>();
+
+    await authController.signInWithGoogle();
+
+    if (!mounted) return;
+
+    if (authController.errorMessage == null && authController.currentUser != null) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const HomeScreen(),
+        ),
+      );
     }
   }
 
@@ -282,7 +298,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             height: 10,
                           ),
                           TextButton.icon(
-                            onPressed: () {},
+                            onPressed: () => signInWithGoogle(),
                             icon: Image.asset(
                               "assets/images/GoogleLogo.png",
                               height: 18,
