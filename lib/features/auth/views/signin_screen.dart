@@ -7,7 +7,8 @@ import 'package:provider/provider.dart';
 import '../controllers/auth_controller.dart';
 
 import 'package:plus_vocab/features/auth/views/signup_screen.dart';
-import 'package:plus_vocab/features/auth/views/recuperar_senha_screen.dart';
+import 'package:plus_vocab/features/auth/views/recovery_pass_email_screen.dart';
+import 'package:plus_vocab/features/homePage/views/home_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -37,7 +38,7 @@ class _SignInScreenState extends State<SignInScreen> {
     super.dispose();
   }
 
-  // Função de submit (Mantida - Sem alterações)
+  // signInWithGoogle
   void _submitLogin() async {
     if (_formKey.currentState?.validate() ?? false) {
       final email = _emailController.text;
@@ -55,13 +56,26 @@ class _SignInScreenState extends State<SignInScreen> {
       if (authController.errorMessage == null) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            // TODO: Troque pelo seu Widget de Home
-            builder: (context) => const Scaffold(
-                body:
-                    SafeArea(child: Text('Home Screen - Login bem sucedido!'))),
+            builder: (context) => const HomeScreen(),
           ),
         );
       }
+    }
+  }
+
+  void signInWithGoogle() async {
+    final authController = context.read<AuthController>();
+
+    await authController.signInWithGoogle();
+
+    if (!mounted) return;
+
+    if (authController.errorMessage == null && authController.currentUser != null) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const HomeScreen(),
+        ),
+      );
     }
   }
 
@@ -284,7 +298,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             height: 10,
                           ),
                           TextButton.icon(
-                            onPressed: () {},
+                            onPressed: () => signInWithGoogle(),
                             icon: Image.asset(
                               "assets/images/GoogleLogo.png",
                               height: 18,

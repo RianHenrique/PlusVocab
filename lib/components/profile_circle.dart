@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:plus_vocab/features/configs/views/config_screen.dart';
 
-class ProfileCircle extends StatelessWidget {
+class ProfileCircle extends StatefulWidget {
   const ProfileCircle({super.key});
+
+  @override
+  State<ProfileCircle> createState() => _ProfileCircleState();
+}
+
+class _ProfileCircleState extends State<ProfileCircle> {
 
   final Color _blue = const Color(0xFF2563EB);
   final Color _bgLight = const Color(0xFFf3f4f6);
@@ -9,7 +16,13 @@ class ProfileCircle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => debugPrint("Clicou no perfil!"),
+      onTap: () => {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const ConfigScreen()
+          ),
+        )
+      },
       customBorder: const CircleBorder(),
       child: Center(
         child: Container(
