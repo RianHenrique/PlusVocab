@@ -1,4 +1,5 @@
 import '../../../core/services/api_client.dart';
+import 'package:flutter/foundation.dart';
 import '../../../core/common_models/user_model.dart';
 import 'package:dio/dio.dart';
 import '../../../core/services/storage_service.dart';
@@ -16,6 +17,10 @@ class AuthService {
     final refreshToken = await _storageService.getRefreshToken();
     final userId = await _storageService.getUserId();
 
+    if (refreshToken == null || userId == null) {
+      throw 'Sessão expirada. Faça login novamente.';
+    }
+
     try {
       final response = await _apiClient.post('/auth/refresh', data: {'refreshToken': refreshToken});
 
@@ -23,8 +28,8 @@ class AuthService {
 
       await _storageService.saveAuthData(
         accessToken: newAccessToken,
-        refreshToken: refreshToken!,
-        userId: userId!,
+        refreshToken: refreshToken,
+        userId: userId,
       );
 
       return true;
@@ -242,28 +247,71 @@ class AuthService {
     }
   }
 
+  Future<User> authGoogle({
+    required String serverAuthCode
+  }) async {
+
+    try {
+      final response = await _apiClient.post('/auth/google', data: {'code': serverAuthCode});
+
+      final userData = response.data;
+
+      User user = User(
+        id: userData['profile']['id'],
+        email: userData['profile']['email'],
+        accessToken: userData['accessToken'],
+        refreshToken: userData['refreshToken']
+      );
+
+      await _storageService.saveAuthData(
+        accessToken: userData['accessToken'],
+        refreshToken: userData['refreshToken'],
+        userId: userData['profile']['id'],
+      );
+
+      return user;
+
+    } catch (e) {
+      if (e is DioException) {
+        // Verifica se a exceção é do Dio
+        if (e.response?.statusCode == 401) {
+          throw 'Falha na autorização com o Google. Tente novamente.';
+        } else {
+          // Outro erro do Dio (como 404, 500, etc.)
+          String serverError = e.response?.data?['message'] ?? 'Falha na comunicação com o servidor.';
+          throw serverError; // Lança a String pura
+        }
+      } else {
+        // Erro genérico
+        throw Exception('Falha ao validar acesso: $e');
+      }
+    }
+  }
+
   Future<void> logOut() async {
     final refreshToken = await _storageService.getRefreshToken();
     try {
       await _apiClient.post('/auth/logout', data: {'refreshToken': refreshToken});
-      await _storageService.clearAuthData();
     } catch (e) {
-      if (e is DioException) {
-        if (e.response == null){
-          if (e.type == DioExceptionType.connectionTimeout) {
-            throw 'O servidor demorou demais para responder.';
-          } else {
-            throw 'Não foi possível conectar ao servidor. Verifique sua internet.';
-          }
-        } else if (e.response?.statusCode == 401) {
-          throw 'Token de acesso inválido.';
-        } else {
-          String serverError = e.response?.data?['message'] ?? 'Falha na comunicação com o servidor.';
-          throw serverError;
-        }
-      } else {
-        throw Exception('Ocorreu algum erro: $e');
-      }
+      // if (e is DioException) {
+      //   if (e.response == null){
+      //     if (e.type == DioExceptionType.connectionTimeout) {
+      //       throw 'O servidor demorou demais para responder.';
+      //     } else {
+      //       throw 'Não foi possível conectar ao servidor. Verifique sua internet.';
+      //     }
+      //   } else if (e.response?.statusCode == 401) {
+      //     throw 'Token de acesso inválido.';
+      //   } else {
+      //     String serverError = e.response?.data?['message'] ?? 'Falha na comunicação com o servidor.';
+      //     throw serverError;
+      //   }
+      debugPrint('Aviso de logout ao servidor falhou: $e');
+      // } else {
+      //   throw Exception('Ocorreu algum erro: $e');
+      // }
+    } finally {
+      await _storageService.clearAuthData();
     }
   }
 }
