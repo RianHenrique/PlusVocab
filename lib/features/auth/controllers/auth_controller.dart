@@ -154,10 +154,12 @@ class AuthController extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
+    await _deepClean();
+
     // 1. Inicializa a configuração (scopings podem ser adicionados se necessário)
     GoogleSignIn googleSignIn = GoogleSignIn(
       serverClientId: "513254980783-0mc882kqo0rdkhtc1qbr4fi3aal8h01o.apps.googleusercontent.com",
-      scopes: ['email'],
+      scopes: ['email', 'profile'],
     );
 
     try {
@@ -167,27 +169,34 @@ class AuthController extends ChangeNotifier {
 
       if (googleUser != null) {
         // 3. Obtém os detalhes da autenticação
-        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        // final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final String? serverAuthCode = googleUser.serverAuthCode;
 
         // 4. Aqui estão os tokens que você precisa
-        String? accessToken = googleAuth.accessToken;
-        String? idToken = googleAuth.idToken;
+        // String? accessToken = googleAuth.accessToken;
+        // String? idToken = googleAuth.idToken;
 
-        debugPrint("Access Token: $accessToken");
-        debugPrint("ID Token: $idToken");
+        // debugPrint("Access Token: $accessToken");
+        // debugPrint("ID Token: $idToken");
 
-        _currentUser = User(
-          id: googleUser.id,
-          email: googleUser.email,
-          accessToken: accessToken!,
-          refreshToken: idToken!,
-        );
+        if (serverAuthCode != null){
+          _currentUser = await _authService.authGoogle(serverAuthCode: serverAuthCode);
+          debugPrint('Usuário logado com sucesso: $_currentUser');
+        } else {
+          debugPrint("Erro: serverAuthCode veio nulo. Verifique o serverClientId.");
+        }
+
+        // _currentUser = User(
+        //   id: googleUser.id,
+        //   email: googleUser.email,
+        //   accessToken: accessToken!,
+        //   refreshToken: idToken!,
+        // );
         
         // Agora você pode enviar esse idToken para o seu backend para validação
       }
       if (googleUser == null) {
-        _isLoading = false;
-        notifyListeners();
+        return;
       }
     } catch (e) {
       _errorMessage = e.toString();
@@ -209,16 +218,46 @@ class AuthController extends ChangeNotifier {
 
     try {
       await _authService.logOut();
-      debugPrint('Usuário deslogado com sucesso: $_currentUser');
       _currentUser = null;
       await googleSignIn.signOut();
+      debugPrint('Usuário deslogado com sucesso');
     } catch (e) {
       _errorMessage = e.toString();
-
     } finally {
       _isLoading = false;
       notifyListeners();
     }
 
+  }
+
+  // No seu AuthController
+  Future<void> _deepClean() async {
+    try {
+      // 1. PRIMEIRO: Limpa o storage. 
+      // Assim, o Interceptor não terá 'accessToken' para anexar a nenhuma chamada.
+      await _authService.storage.clearAuthData();
+      
+      _currentUser = null;
+      _errorMessage = null;
+      notifyListeners();
+
+      // 2. DEPOIS: Limpa o Google
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        serverClientId: "513254980783-0mc882kqo0rdkhtc1qbr4fi3aal8h01o.apps.googleusercontent.com",
+      );
+
+      // SignOut é local, raramente dá erro.
+      await googleSignIn.signOut();
+
+      // Disconnect pode tentar ir na rede. 
+      // Como o storage já foi limpo acima, o Interceptor irá sem token (o que é correto).
+      try {
+        await googleSignIn.disconnect();
+      } catch (e) {
+        debugPrint("Google disconnect ignorado: $e");
+      }
+    } catch (e) {
+      debugPrint("Erro na limpeza profunda: $e");
+    }
   }
 }

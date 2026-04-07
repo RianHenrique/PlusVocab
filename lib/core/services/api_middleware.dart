@@ -9,7 +9,7 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
-    const publicRoutes = ['/auth/login', '/auth/signup', '/auth/refresh'];
+    const publicRoutes = ['/auth/login', '/auth/signup', '/auth/refresh', '/auth/google'];
 
     if (publicRoutes.contains(options.path)) {
       return handler.next(options); // Segue viagem sem mexer em nada
@@ -19,7 +19,7 @@ class AuthInterceptor extends Interceptor {
     final token = await _authService.storage.getAccessToken();
     
     // 2. Adiciona o token no Header
-    if (token != null) {
+    if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }
     
@@ -28,6 +28,13 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
+    final path = err.requestOptions.path;
+    if (path.contains('/auth/login') || 
+        path.contains('/auth/google') || 
+        path.contains('/auth/logout') ||
+        path.contains('/auth/refresh')) {
+      return handler.next(err); 
+    }
     // 3. Verifica se o erro foi 401 (Token expirado)
     if (err.response?.statusCode == 401) {
       try {

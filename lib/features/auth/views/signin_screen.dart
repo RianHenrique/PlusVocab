@@ -76,6 +76,11 @@ class _SignInScreenState extends State<SignInScreen> {
           builder: (context) => const HomeScreen(),
         ),
       );
+    } else if (authController.errorMessage != null) {
+      // Deu erro (ex: 401 do backend), mostra o erro
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(authController.errorMessage!)),
+      );
     }
   }
 

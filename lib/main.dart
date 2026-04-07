@@ -83,8 +83,7 @@ class MyApp extends StatelessWidget {
           } else {
             final isAuthenticated = snapshot.data ?? false;
             if (isAuthenticated) {
-              // return const HomeScreen();
-              return const HomeScreen(); // Substitua pelo seu HomeScreen real
+              return const HomeScreen();
             } else {
               return const SignInScreen();
             }
