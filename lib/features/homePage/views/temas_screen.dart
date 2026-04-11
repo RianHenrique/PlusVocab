@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:plus_vocab/core/theme/app_colors.dart';
 
 class TemasScreen extends StatefulWidget {
   const TemasScreen({super.key});
@@ -10,9 +11,6 @@ class TemasScreen extends StatefulWidget {
 
 class _TemasScreenState extends State<TemasScreen> {
   final TextEditingController _searchController = TextEditingController();
-
-  final Color _blue = const Color(0xFF2563EB);
-  final Color _bgLight = const Color(0xFFf3f4f6);
 
   static const List<Map<String, dynamic>> allThemes = [
     {'tema': 'Ida a um restaurante', 'matches': 5, 'successRate': 75},
@@ -46,15 +44,15 @@ class _TemasScreenState extends State<TemasScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15),
       decoration: BoxDecoration(
-        color: _bgLight,
+        color: AppColors.fundoClaro,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: const Color(0xFFD9D9D9),
+          color: AppColors.bordaCampo,
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: AppColors.sombraLeve,
               blurRadius: 4,
               offset: const Offset(0, 4))
         ],
@@ -66,16 +64,16 @@ class _TemasScreenState extends State<TemasScreen> {
         maxLines: null,
         style: GoogleFonts.lexend(
           fontSize: 14,
-          color: Colors.black87,
+          color: AppColors.textoPreto,
         ),
         decoration: InputDecoration(
           hintText: 'Pesquise aqui por um tema',
           hintStyle: GoogleFonts.lexend(
             fontSize: 14,
-            color: Colors.black54
+            color: AppColors.textoSecundario
           ), // Usando Lexend
           border: InputBorder.none,
-          suffixIcon: Icon(Icons.search, color: _blue),
+          suffixIcon: const Icon(Icons.search, color: AppColors.primaria),
         ),
       ),
     );
@@ -99,11 +97,11 @@ class _TemasScreenState extends State<TemasScreen> {
           padding: const EdgeInsets.all(15.0),
           margin: const EdgeInsets.only(bottom: 15.0),
           decoration: BoxDecoration(
-            color: _bgLight,
+            color: AppColors.fundoClaro,
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
+                color: AppColors.sombraLeve,
                 blurRadius: 4,
                 offset: const Offset(0, 4),
               ),
@@ -117,30 +115,30 @@ class _TemasScreenState extends State<TemasScreen> {
                 style: GoogleFonts.lexend(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: _blue,
+                  color: AppColors.textoAzul,
                 ),
               ),
               const SizedBox(height: 5),
               Text(
                 'Número de partidas: $matches | Taxa de acerto: $successRate%',
                 style: GoogleFonts.lexend(
-                  color: Colors.black54,
+                  color: AppColors.textoSecundario,
                   fontSize: 12,
                 ),
               ),
               const SizedBox(height: 15),
               Row(
                 children: [
-                  _builderIconButton(Icons.delete_outline, Colors.redAccent),
+                  _builderIconButton(Icons.delete_outline, AppColors.erro),
                   const SizedBox(width: 5),
-                  _builderIconButton(Icons.edit_outlined, _blue),
+                  _builderIconButton(Icons.edit_outlined, AppColors.primaria),
                   const SizedBox(width: 10),
                   ElevatedButton(
                     onPressed: () {
                       // Lógica para iniciar o jogo com esse tema
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _blue,
+                      backgroundColor: AppColors.primaria,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(5),
                       ),
@@ -148,7 +146,7 @@ class _TemasScreenState extends State<TemasScreen> {
                           horizontal: 16, vertical: 8),
                     ),
                     child: Text('Iniciar nova prática',
-                        style: GoogleFonts.lexend(color: Colors.white, fontSize: 12)),
+                        style: GoogleFonts.lexend(color: AppColors.branco, fontSize: 12)),
                   ),
                 ],
               ),
@@ -170,7 +168,7 @@ class _TemasScreenState extends State<TemasScreen> {
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
                   'Nenhum tema encontrado',
-                  style: GoogleFonts.lexend(fontSize: 14, color: Colors.black54),
+                  style: GoogleFonts.lexend(fontSize: 14, color: AppColors.textoSecundario),
                 ),
               ),
             )

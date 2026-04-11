@@ -10,7 +10,7 @@ class ApiClient {
   ApiClient()
       : dio = Dio(
           BaseOptions(
-            baseUrl: 'http://192.168.86.72:3000/api',
+            baseUrl: 'https://plus_vocab-api.onrender.com/api',
             connectTimeout: const Duration(seconds: 5),
             // Você pode configurar headers padrões, interceptors, etc. TUDO AQUI
           ),

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../controllers/auth_controller.dart';
 
+import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/features/auth/views/signup_screen.dart';
 import 'package:plus_vocab/features/auth/views/recovery_pass_email_screen.dart';
 import 'package:plus_vocab/features/homePage/views/home_screen.dart';
@@ -25,11 +26,6 @@ class _SignInScreenState extends State<SignInScreen> {
   final _passwordController = TextEditingController();
 
   bool _isPasswordVisible = false;
-
-  // --- NOVAS CORES DO DESIGN ---
-  final Color _blue = const Color(0xFF2563EB);
-  final Color _bgLight = const Color(0xFFf3f4f6);
-  // --- FIM DAS NOVAS CORES ---
 
   @override
   void dispose() {
@@ -93,7 +89,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
     // --- ESTRUTURA DO BUILD METHOD ATUALIZADA ---
     return Scaffold(
-        backgroundColor: _bgLight, // Cor de fundo do design
+        backgroundColor: AppColors.fundoClaro,
         body: Stack(children: [
           SizedBox.expand(
               child: Image.asset(
@@ -112,11 +108,11 @@ class _SignInScreenState extends State<SignInScreen> {
                   margin: const EdgeInsets.symmetric(vertical: 20),
                   width: MediaQuery.of(context).size.width * 0.85,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.branco,
                     borderRadius: BorderRadius.circular(12),
-                    boxShadow: const [
+                    boxShadow: [
                       BoxShadow(
-                        color: Colors.black12,
+                        color: AppColors.sombraCard,
                         blurRadius: 4,
                       )
                     ],
@@ -144,7 +140,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             "Comece agora a aprender novas palavras!",
                             style: GoogleFonts.lexend(
                                 fontSize: 18,
-                                color: _blue,
+                                color: AppColors.textoAzul,
                                 fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(
@@ -193,7 +189,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                       _isPasswordVisible
                                           ? Icons.visibility
                                           : Icons.visibility_off,
-                                      color: Colors.grey),
+                                      color: AppColors.textoHint),
                                   iconSize: 18,
                                 )),
                             validator: (value) {
@@ -226,7 +222,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                   style: GoogleFonts.lexend(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w300,
-                                      color: _blue),
+                                      color: AppColors.primaria),
                                 ),
                               )),
                           const SizedBox(
@@ -238,7 +234,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             child: ElevatedButton(
                               onPressed: isLoading ? null : _submitLogin,
                               style: ElevatedButton.styleFrom(
-                                  backgroundColor: _blue,
+                                  backgroundColor: AppColors.primaria,
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8))),
                               child: isLoading
@@ -247,11 +243,11 @@ class _SignInScreenState extends State<SignInScreen> {
                                       width: 24,
                                       height: 24,
                                       child: CircularProgressIndicator(
-                                          strokeWidth: 3, color: Colors.white),
+                                          strokeWidth: 3, color: AppColors.branco),
                                     )
                                   : Text("Entrar",
                                       style: GoogleFonts.lexend(
-                                          fontSize: 14, color: Colors.white)),
+                                          fontSize: 14, color: AppColors.branco)),
                             ),
                           ),
                           const SizedBox(height: 10),
@@ -263,8 +259,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                 child: Text(
                                   errorMessage,
                                   style: GoogleFonts.lexend(
-                                      color:
-                                          Theme.of(context).colorScheme.error,
+                                      color: AppColors.erro,
                                       fontWeight: FontWeight.w300,
                                       fontSize: 12),
                                   textAlign: TextAlign.center,
@@ -278,7 +273,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             children: [
                               Expanded(
                                 child: Divider(
-                                  color: Colors.grey[400],
+                                  color: AppColors.linhaDivisoria,
                                   thickness: 1,
                                   endIndent: 10,
                                 ),
@@ -288,11 +283,11 @@ class _SignInScreenState extends State<SignInScreen> {
                                 style: GoogleFonts.lexend(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w300,
-                                    color: Colors.grey),
+                                    color: AppColors.textoSuave),
                               ),
                               Expanded(
                                 child: Divider(
-                                  color: Colors.grey[400],
+                                  color: AppColors.linhaDivisoria,
                                   thickness: 1,
                                   indent: 10,
                                 ),
@@ -310,7 +305,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             ),
                             label: Text("Entrar com Google",
                                 style: GoogleFonts.lexend(
-                                    fontSize: 12, color: Colors.grey[500])),
+                                    fontSize: 12, color: AppColors.textoSuave)),
                           ),
                           const SizedBox(
                             height: 10,
@@ -320,13 +315,13 @@ class _SignInScreenState extends State<SignInScreen> {
                                 style: GoogleFonts.lexend(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w300,
-                                    color: Colors.grey),
+                                    color: AppColors.textoSuave),
                                 children: [
                                   const TextSpan(text: "Não tem uma conta?  "),
                                   TextSpan(
                                       text: "Criar uma conta",
                                       style: GoogleFonts.lexend(
-                                          color: _blue,
+                                          color: AppColors.primaria,
                                           fontWeight: FontWeight.bold),
                                       recognizer: TapGestureRecognizer()
                                         ..onTap = () {

@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../controllers/auth_controller.dart';
+import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/features/auth/views/signin_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -25,11 +26,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   // Estados de visibilidade (Mantidos)
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
-
-  // --- NOVAS CORES DO DESIGN (COPIADAS DO SIGNIN) ---
-  final Color _blue = const Color(0xFF2563EB);
-  final Color _bgLight = const Color(0xFFf3f4f6);
-  // --- FIM DAS NOVAS CORES ---
 
   @override
   void dispose() {
@@ -76,7 +72,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     // --- ESTRUTURA DO BUILD METHOD ATUALIZADA ---
     return Scaffold(
-      backgroundColor: _bgLight, // Cor de fundo do design
+      backgroundColor: AppColors.fundoClaro,
       body: Stack(
         children: [
           SizedBox.expand(
@@ -97,11 +93,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   margin: const EdgeInsets.symmetric(vertical: 20),
                   width: MediaQuery.of(context).size.width * 0.85,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.branco,
                     borderRadius: BorderRadius.circular(12),
-                    boxShadow: const [
+                    boxShadow: [
                       BoxShadow(
-                        color: Colors.black12,
+                        color: AppColors.sombraCard,
                         blurRadius: 4,
                       )
                     ],
@@ -125,7 +121,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             "Comece agora a aprender novas palavras!",
                             style: GoogleFonts.lexend(
                               fontSize: 18,
-                              color: _blue,
+                              color: AppColors.textoAzul,
                               fontWeight: FontWeight.bold
                             ),
                           ),
@@ -166,7 +162,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 }, 
                                 icon: Icon(
                                   _isPasswordVisible ? Icons.visibility : Icons.visibility_off, 
-                                  color: Colors.grey
+                                  color: AppColors.textoHint
                                 ),
                                 iconSize: 18,
                               )
@@ -197,7 +193,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 }, 
                                 icon: Icon(
                                   _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off, 
-                                  color: Colors.grey
+                                  color: AppColors.textoHint
                                 ),
                                 iconSize: 18,
                               )
@@ -215,19 +211,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             height: 40,
                             child: ElevatedButton(
                               onPressed: isLoading ? null : _submitSignUp,
-                              style: ElevatedButton.styleFrom(backgroundColor: _blue, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaria, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
                               child: isLoading
                               ? const SizedBox( // Seu loading
                                   width: 24,
                                   height: 24,
                                   child: CircularProgressIndicator(
-                                    strokeWidth: 3, color: Colors.white),
+                                    strokeWidth: 3, color: AppColors.branco),
                                 )
                               : Text(
                                   "Cadastrar",
                                   style: GoogleFonts.lexend(
                                     fontSize: 14,
-                                    color: Colors.white
+                                    color: AppColors.branco
                                   ) 
                                 ),
                             ),
@@ -240,7 +236,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 child: Text(
                                   errorMessage,
                                   style: GoogleFonts.lexend(
-                                    color: Theme.of(context).colorScheme.error,
+                                    color: AppColors.erro,
                                     fontWeight: FontWeight.w300,
                                     fontSize: 12
                                   ),
@@ -253,7 +249,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             children: [
                               Expanded(
                                 child: Divider(
-                                  color: Colors.grey[400],
+                                  color: AppColors.linhaDivisoria,
                                   thickness: 1,
                                   endIndent: 10,
                                 ),
@@ -263,12 +259,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 style: GoogleFonts.lexend(
                                   fontSize: 10, 
                                   fontWeight: FontWeight.w300,
-                                  color: Colors.grey
+                                  color: AppColors.textoSuave
                                 ),
                               ),
                               Expanded(
                                 child: Divider(
-                                  color: Colors.grey[400],
+                                  color: AppColors.linhaDivisoria,
                                   thickness: 1,
                                   indent: 10,
                                 ),
@@ -286,7 +282,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               "Cadastrar com Google",
                               style: GoogleFonts.lexend(
                                 fontSize: 12,
-                                color: Colors.grey[500]
+                                color: AppColors.textoSuave
                               )
                             ),
                           ),
@@ -296,7 +292,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               style: GoogleFonts.lexend(
                                 fontSize: 12, 
                                 fontWeight: FontWeight.w300,
-                                color: Colors.grey
+                                color: AppColors.textoSuave
                               ),
                               children: [
                                 const TextSpan(
@@ -305,7 +301,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 TextSpan(
                                   text: "Entrar",
                                   style: GoogleFonts.lexend(
-                                    color: _blue,
+                                    color: AppColors.primaria,
                                     fontWeight: FontWeight.bold,
                                   ),
                                   recognizer: TapGestureRecognizer()..onTap = (){

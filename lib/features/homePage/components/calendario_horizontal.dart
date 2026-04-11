@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:plus_vocab/core/theme/app_colors.dart';
 
 class HorizontalCalendar extends StatelessWidget {
   const HorizontalCalendar({super.key});
@@ -11,9 +12,6 @@ class HorizontalCalendar extends StatelessWidget {
     {'label': 'sex', 'day': '30', 'selected': false, 'isCurrent': false},
     {'label': 'sab', 'day': '31', 'selected': false, 'isCurrent': false},
   ];
-
-  final Color _blue = const Color(0xFF2563EB);
-  final Color _bgLight = const Color(0xFFf3f4f6);
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +32,7 @@ class HorizontalCalendar extends StatelessWidget {
                   Text(
                     dayInfo['label']!,
                     style: GoogleFonts.lexend(
-                      color: dayInfo['isCurrent'] ? _blue : Colors.black,
+                      color: dayInfo['isCurrent'] ? AppColors.primaria : AppColors.textoPreto,
                       fontWeight: dayInfo['isCurrent'] ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
@@ -44,11 +42,11 @@ class HorizontalCalendar extends StatelessWidget {
                     height: 45,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: dayInfo['selected'] ? _blue : Colors.grey[300],
+                      color: dayInfo['selected'] ? AppColors.primaria : AppColors.bordaCampo,
                     ),
                     alignment: Alignment.center,
                     child: Text(dayInfo['day'], 
-                      style: TextStyle(color: dayInfo['selected'] ? _bgLight : Colors.black87)
+                      style: TextStyle(color: dayInfo['selected'] ? AppColors.fundoClaro : AppColors.textoPreto)
                     ),
                   ),
                 ],

@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import 'package:google_fonts/google_fonts.dart';
+import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/components/profile_circle.dart';
 import 'package:plus_vocab/features/homePage/components/calendario_horizontal.dart';
 import 'package:plus_vocab/features/homePage/components/tab_selector.dart';
@@ -14,15 +15,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final Color _blue = const Color(0xFF2563EB);
-  final Color _bgLight = const Color(0xFFf3f4f6);
-
   String _currentTab = 'Temas';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bgLight,
+      backgroundColor: AppColors.fundoClaro,
       body: Stack(
         children: [
           SizedBox.expand(
@@ -61,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: GoogleFonts.lexend(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: _blue,
+                          color: AppColors.textoAzul,
                         ),
                       ),
                     ),
@@ -69,15 +67,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 15),
                       decoration: BoxDecoration(
-                        color: _bgLight,
+                        color: AppColors.fundoClaro,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: const Color(0xFFD9D9D9),
+                          color: AppColors.bordaCampo,
                           width: 1,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
+                            color: AppColors.sombraLeve,
                             blurRadius: 4,
                             offset: const Offset(0, 4),
                           ),
@@ -97,16 +95,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         maxLines: null,
                         style: GoogleFonts.lexend(
                           fontSize: 14,
-                          color: Colors.black87,
+                          color: AppColors.textoPreto,
                         ),
                         decoration: InputDecoration(
                           hintText: "Digite o contexto da prática",
                           hintStyle: GoogleFonts.lexend(
                             fontSize: 14,
-                            color: Colors.black54,
+                            color: AppColors.textoSecundario,
                           ),
                           border: InputBorder.none,
-                          suffixIcon: Icon(Icons.mic, color: _blue),
+                          suffixIcon: const Icon(Icons.mic, color: AppColors.primaria),
                         ),
                       ),
                     ),

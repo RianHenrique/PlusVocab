@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:plus_vocab/core/theme/app_colors.dart';
 
 class SelectionListGroup extends StatelessWidget {
   final List<String> options;
@@ -12,9 +13,6 @@ class SelectionListGroup extends StatelessWidget {
     required this.selectedOptions,
     required this.onOptionToggled,
   });
-
-  final Color _blue = const Color(0xFF2563EB);
-  final Color _bgLight = const Color(0xFFf3f4f6);
 
   @override
   Widget build(BuildContext context) {
@@ -31,14 +29,14 @@ class SelectionListGroup extends StatelessWidget {
                   width: 16, height: 16,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isSelected ? _blue : _bgLight,
-                    border: Border.all(color: _blue, width: 1),
+                    color: isSelected ? AppColors.primaria : AppColors.fundoClaro,
+                    border: Border.all(color: AppColors.primaria, width: 1),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Text(
                   option,
-                  style: GoogleFonts.lexend(fontSize: 14, color: Colors.black87),
+                  style: GoogleFonts.lexend(fontSize: 14, color: AppColors.textoPreto),
                 ),
               ],
             ),

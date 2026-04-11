@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../controllers/auth_controller.dart';
 
+import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/features/auth/views/signin_screen.dart';
 import 'package:plus_vocab/features/auth/views/reset_pass_screen.dart';
 
@@ -20,9 +21,6 @@ class _RecoveryPassCodeScreenState extends State<RecoveryPassCodeScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final _codeController = TextEditingController();
-
-  final Color _blue = const Color(0xFF2563EB);
-  final Color _bgLight = const Color(0xFFf3f4f6);
 
   @override
   void dispose() {
@@ -63,7 +61,7 @@ class _RecoveryPassCodeScreenState extends State<RecoveryPassCodeScreen> {
     final String? errorMessage = authState.errorMessage;
 
     return Scaffold(
-      backgroundColor: _bgLight,
+      backgroundColor: AppColors.fundoClaro,
       body: Stack(
         children: [
           SizedBox.expand(
@@ -82,11 +80,11 @@ class _RecoveryPassCodeScreenState extends State<RecoveryPassCodeScreen> {
                 margin: const EdgeInsets.symmetric(vertical: 20),
                 width: MediaQuery.of(context).size.width * 0.85,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.branco,
                   borderRadius: BorderRadius.circular(12),
-                  boxShadow: const [
+                  boxShadow: [
                     BoxShadow(
-                      color: Colors.black12,
+                      color: AppColors.sombraCard,
                       blurRadius: 4,
                     )
                   ],
@@ -116,7 +114,7 @@ class _RecoveryPassCodeScreenState extends State<RecoveryPassCodeScreen> {
                             "Digite o código enviado para o seu email",
                             style: GoogleFonts.lexend(
                                 fontSize: 18,
-                                color: _blue,
+                                color: AppColors.textoAzul,
                                 fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -151,7 +149,7 @@ class _RecoveryPassCodeScreenState extends State<RecoveryPassCodeScreen> {
                           child: ElevatedButton(
                             onPressed: isLoading ? null : _submitRecoveryCode,
                             style: ElevatedButton.styleFrom(
-                                backgroundColor: _blue,
+                                backgroundColor: AppColors.primaria,
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8))),
                             child: isLoading
@@ -160,11 +158,11 @@ class _RecoveryPassCodeScreenState extends State<RecoveryPassCodeScreen> {
                                     width: 24,
                                     height: 24,
                                     child: CircularProgressIndicator(
-                                        strokeWidth: 3, color: Colors.white),
+                                        strokeWidth: 3, color: AppColors.branco),
                                   )
                                 : Text("Enviar",
                                     style: GoogleFonts.lexend(
-                                        fontSize: 14, color: Colors.white)),
+                                        fontSize: 14, color: AppColors.branco)),
                           ),
                         ),
                         errorMessage != null ?const SizedBox(height: 10) : const SizedBox(height: 0),
@@ -175,7 +173,7 @@ class _RecoveryPassCodeScreenState extends State<RecoveryPassCodeScreen> {
                               child: Text(
                                 errorMessage,
                                 style: GoogleFonts.lexend(
-                                  color: Theme.of(context).colorScheme.error,
+                                  color: AppColors.erro,
                                   fontWeight: FontWeight.w300,
                                   fontSize: 12
                                 ),
@@ -194,7 +192,7 @@ class _RecoveryPassCodeScreenState extends State<RecoveryPassCodeScreen> {
                             },
                             child: Text("Voltar para o login",
                                 style: GoogleFonts.lexend(
-                                    fontSize: 12, color: _blue))),
+                                    fontSize: 12, color: AppColors.primaria))),
                         const SizedBox(
                           height: 5,
                         ),

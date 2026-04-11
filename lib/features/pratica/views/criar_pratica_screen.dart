@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:plus_vocab/core/theme/app_colors.dart';
 
 import 'package:plus_vocab/features/pratica/components/seletor_modalidades.dart';
 import 'package:plus_vocab/features/pratica/components/seletor_dificuldade.dart';
@@ -17,7 +18,7 @@ class _FormsPraticaState extends State<FormsPratica> {
   final _formKey = GlobalKey<FormState>();
 
   late TextEditingController _contextoController;
-  List<String> _selecionados = [];
+  final List<String> _selecionados = [];
   String _nivelFluencia = "Básico"; // TODO: vai vir do backend
 
   final List<String> allOptions = [
@@ -26,9 +27,6 @@ class _FormsPraticaState extends State<FormsPratica> {
     "Dialogue Completion",
     "Listening Comprehension",
   ];
-
-  final Color _blue = const Color(0xFF2563EB);
-  final Color _bgLight = const Color(0xFFf3f4f6);
 
   @override
   void initState() {
@@ -46,7 +44,7 @@ class _FormsPraticaState extends State<FormsPratica> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bgLight,
+      backgroundColor: AppColors.fundoClaro,
       body: Stack(
         children: [
           SizedBox.expand(
@@ -63,12 +61,12 @@ class _FormsPraticaState extends State<FormsPratica> {
               appBar: AppBar(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
-                title: Text("Criar uma prática", style: GoogleFonts.lexend(color: Colors.black, fontSize: 16),),
+                title: Text("Criar uma prática", style: GoogleFonts.lexend(color: AppColors.textoPreto, fontSize: 16),),
                 centerTitle: true,
                 leading: Padding(
                   padding: const EdgeInsets.only(left: 25.0),
                   child: IconButton(
-                    icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20,),
+                    icon: const Icon(Icons.arrow_back_ios, color: AppColors.textoPreto, size: 20,),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ),
@@ -85,10 +83,10 @@ class _FormsPraticaState extends State<FormsPratica> {
                           style: GoogleFonts.lexend(
                             fontSize: 14, 
                             fontWeight: FontWeight.normal, 
-                            color: _blue
+                            color: AppColors.textoAzul
                           ),
                         ),
-                        Divider(color: _blue),
+                        const Divider(color: AppColors.primaria),
                         const SizedBox(height: 10),
                         Form(
                           key: _formKey,
@@ -99,21 +97,21 @@ class _FormsPraticaState extends State<FormsPratica> {
                                 "Contexto da prática",
                                 style: GoogleFonts.lexend(
                                   fontSize: 12,
-                                  color: Colors.black87,
+                                  color: AppColors.textoPreto,
                                 ),
                               ),
                               const SizedBox(height: 8),
                               Container(
                                 decoration: BoxDecoration(
-                                  color: _bgLight,
+                                  color: AppColors.fundoClaro,
                                   borderRadius: BorderRadius.circular(10),
                                   border: Border.all(
-                                    color: const Color(0xFFD9D9D9),
+                                    color: AppColors.bordaCampo,
                                     width: 1,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.1),
+                                      color: AppColors.sombraLeve,
                                       blurRadius: 4,
                                       offset: const Offset(0, 4),
                                     ),
@@ -123,15 +121,15 @@ class _FormsPraticaState extends State<FormsPratica> {
                                   controller: _contextoController,
                                   style: GoogleFonts.lexend(
                                     fontSize: 14,
-                                    color: Colors.black87,
+                                    color: AppColors.textoPreto,
                                   ),
-                                  decoration: InputDecoration(
-                                    border: const OutlineInputBorder(
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(
                                       borderRadius: BorderRadius.all(Radius.circular(12)),
-                                      borderSide: BorderSide.none, // Remove a linha da borda padrão
+                                      borderSide: BorderSide.none,
                                     ),
                                     filled: true,
-                                    fillColor: _bgLight,
+                                    fillColor: AppColors.fundoClaro,
                                   ),
                                 ),
                               ),
@@ -140,7 +138,7 @@ class _FormsPraticaState extends State<FormsPratica> {
                                 "Modalidades de prática",
                                 style: GoogleFonts.lexend(
                                   fontSize: 12,
-                                  color: Colors.black87,
+                                  color: AppColors.textoPreto,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -162,7 +160,7 @@ class _FormsPraticaState extends State<FormsPratica> {
                                 "Nível de fluência",
                                 style: GoogleFonts.lexend(
                                   fontSize: 12,
-                                  color: Colors.black87,
+                                  color: AppColors.textoPreto,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -178,8 +176,8 @@ class _FormsPraticaState extends State<FormsPratica> {
                                 width: double.infinity,
                                 child: ElevatedButton(
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: _blue,
-                                    foregroundColor: Colors.white,
+                                    backgroundColor: AppColors.primaria,
+                                    foregroundColor: AppColors.branco,
                                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
@@ -188,7 +186,7 @@ class _FormsPraticaState extends State<FormsPratica> {
                                   onPressed: () {},
                                   child: Text(
                                     "Iniciar uma partida",
-                                    style: GoogleFonts.lexend(fontSize: 14, fontWeight: FontWeight.bold, color: _bgLight),
+                                    style: GoogleFonts.lexend(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.branco),
                                   )
                                 ),
                               ),
@@ -205,7 +203,7 @@ class _FormsPraticaState extends State<FormsPratica> {
                                   onPressed: () {},
                                   child: Text(
                                     "Criar a prática",
-                                    style: GoogleFonts.lexend(fontSize: 14, fontWeight: FontWeight.normal, color: _blue),
+                                    style: GoogleFonts.lexend(fontSize: 14, fontWeight: FontWeight.normal, color: AppColors.primaria),
                                   )
                                 ),
                               ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/features/homePage/views/home_screen.dart';
 
 import 'package:provider/provider.dart';
@@ -62,8 +63,15 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'MyApp',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        textTheme: GoogleFonts.lexendTextTheme(Theme.of(context).textTheme),
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primaria,
+          primary: AppColors.primaria,
+          secondary: AppColors.secundaria,
+          error: AppColors.erro,
+        ),
+        textTheme: GoogleFonts.lexendTextTheme(Theme.of(context).textTheme)
+            .apply(bodyColor: AppColors.textoPreto, displayColor: AppColors.textoPreto),
       ),
       home: FutureBuilder<bool>(
         future: context.read<AuthController>().checkAuthStatus(),
@@ -71,7 +79,7 @@ class MyApp extends StatelessWidget {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
               body: Center(
-                child: CircularProgressIndicator(),
+                child: CircularProgressIndicator(color: AppColors.primaria),
               ),
             );
           } else if (snapshot.hasError) {

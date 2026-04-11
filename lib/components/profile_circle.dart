@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/features/configs/views/config_screen.dart';
 
 class ProfileCircle extends StatefulWidget {
@@ -9,9 +10,6 @@ class ProfileCircle extends StatefulWidget {
 }
 
 class _ProfileCircleState extends State<ProfileCircle> {
-
-  final Color _blue = const Color(0xFF2563EB);
-  final Color _bgLight = const Color(0xFFf3f4f6);
 
   @override
   Widget build(BuildContext context) {
@@ -30,23 +28,23 @@ class _ProfileCircleState extends State<ProfileCircle> {
           height: 50,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: _bgLight,
+            color: AppColors.fundoClaro,
             border: Border.all(
-              color: _blue,
+              color: AppColors.primaria,
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha:0.25),
+                color: AppColors.sombraElevacao,
                 blurRadius: 4,
                 offset: const Offset(0, 4),
               )
             ], // Cor de fundo do círculo
           ),
-          child:  Icon(
-            Icons.person, // Ícone de perfil
-            color: _blue, // Cor do ícone
-            size: 30, // Tamanho do ícone
+          child: const Icon(
+            Icons.person,
+            color: AppColors.primaria,
+            size: 30,
           ),
         ),
       ),
