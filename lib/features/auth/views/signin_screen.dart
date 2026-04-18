@@ -9,7 +9,7 @@ import '../controllers/auth_controller.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/features/auth/views/signup_screen.dart';
 import 'package:plus_vocab/features/auth/views/recovery_pass_email_screen.dart';
-import 'package:plus_vocab/features/homePage/views/home_screen.dart';
+import 'package:plus_vocab/features/home/views/home_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});

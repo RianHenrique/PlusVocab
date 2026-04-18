@@ -1,16 +1,50 @@
-# plus_vocab
+# +Vocab — Flutter App
 
-A new Flutter project.
+App mobile de aprendizado de inglês com repetição espaçada (Sistema de Leitner) e exercícios gerados por IA.
 
-## Getting Started
+## Organização do Projeto
 
-This project is a starting point for a Flutter application.
+Utilizamos o padrão **feature-first**, onde cada funcionalidade do app tem sua própria pasta com tudo que precisa.
 
-A few resources to get you started if this is your first Flutter project:
+```
+lib/
+├── main.dart
+├── core/                  → serviços e utilitários compartilhados (não visuais)
+│   ├── services/          → ApiClient, StorageService, AuthInterceptor
+│   ├── common_models/     → modelos globais (User, etc)
+│   └── theme/             → paleta de cores e estilos
+├── components/            → widgets visuais compartilhados entre features
+└── features/
+    ├── auth/              → login, cadastro, recuperação de senha
+    ├── home/              → tela principal com resumos
+    ├── temas/             → CRUD de temas e cards
+    ├── pratica/           → criação e execução dos exercícios
+    ├── vocabulario/       → lista de palavras do usuário
+    ├── progresso/         → estatísticas e progresso
+    └── configs/           → configurações e logout
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Cada feature segue a mesma estrutura interna:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```
+feature/
+├── views/        → telas completas
+├── components/   → widgets específicos da feature
+├── controllers/  → gerência de estado (Provider / ChangeNotifier)
+└── models/       → chamadas à API e lógica de negócio
+```
+
+## Tecnologias
+
+- Flutter 3.41.7 (gerenciado via FVM)
+- Provider — gerência de estado
+- Dio — cliente HTTP
+- Flutter Secure Storage — armazenamento seguro de tokens
+- Google Fonts (Lexend)
+
+## Como rodar
+
+```bash
+fvm flutter pub get
+fvm flutter run
+```

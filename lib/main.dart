@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
-import 'package:plus_vocab/features/homePage/views/home_screen.dart';
+import 'package:plus_vocab/features/home/views/home_screen.dart';
 
 import 'package:provider/provider.dart';
 import 'features/auth/controllers/auth_controller.dart';
 import 'features/auth/models/auth_service.dart';
 import 'features/auth/views/signin_screen.dart';
+import 'features/temas/models/temas_service.dart';
+import 'features/temas/controllers/temas_controller.dart';
 import 'core/services/api_client.dart';
 import 'core/services/storage_service.dart';
 
@@ -41,13 +43,16 @@ void main() {
           },
         ),
 
+        Provider<TemasService>(
+          create: (context) => TemasService(context.read<ApiClient>()),
+        ),
+
         // --- NÍVEL DE CONTROLLER ("C") ---
-        // Provê o AuthController, que DEPENDE do AuthService
         ChangeNotifierProvider(
-          create: (context) => AuthController(
-            // Usa 'context.read' para pegar o AuthService que acabamos de prover
-            context.read<AuthService>(),
-          ),
+          create: (context) => AuthController(context.read<AuthService>()),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => TemasController(context.read<TemasService>()),
         ),
       ],
       child: const MyApp(),

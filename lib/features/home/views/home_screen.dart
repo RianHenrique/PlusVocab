@@ -2,10 +2,10 @@ import "package:flutter/material.dart";
 import 'package:google_fonts/google_fonts.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/components/profile_circle.dart';
-import 'package:plus_vocab/features/homePage/components/calendario_horizontal.dart';
-import 'package:plus_vocab/features/homePage/components/tab_selector.dart';
-import 'package:plus_vocab/features/homePage/views/temas_screen.dart';
-import 'package:plus_vocab/features/pratica/views/criar_pratica_screen.dart';
+import 'package:plus_vocab/features/home/components/calendario_horizontal.dart';
+import 'package:plus_vocab/features/home/components/tab_selector.dart';
+import 'package:plus_vocab/features/home/views/temas_screen.dart';
+import 'package:plus_vocab/features/temas/views/criar_tema_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -86,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) =>
-                                  FormsPratica(contexto: value),
+                                  CriarTemaScreen(contexto: value),
                             ),
                           );
                         },
