@@ -13,6 +13,7 @@ class DialogueCompletionPracticeBody extends StatelessWidget {
     required this.onMicPointerDown,
     required this.onMicPointerUpOrCancel,
     this.transcriptFeedbackCorrect,
+    this.onSkip,
   });
 
   final String promptLine;
@@ -23,6 +24,9 @@ class DialogueCompletionPracticeBody extends StatelessWidget {
   final VoidCallback onMicPointerDown;
   final VoidCallback onMicPointerUpOrCancel;
   final bool? transcriptFeedbackCorrect;
+
+  /// Se não for nulo, exibe o botão "Pular" ao final (preenche resposta inválida e segue o fluxo de envio).
+  final VoidCallback? onSkip;
 
   @override
   Widget build(BuildContext context) {
@@ -174,6 +178,25 @@ class DialogueCompletionPracticeBody extends StatelessWidget {
               ),
             ),
           ),
+          if (onSkip != null) ...[
+            const SizedBox(height: 28),
+            Center(
+              child: TextButton(
+                onPressed: onSkip,
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.textoSecundario,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                ),
+                child: Text(
+                  'Pular',
+                  style: GoogleFonts.lexend(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

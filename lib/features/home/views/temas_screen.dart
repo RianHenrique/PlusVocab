@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
 
-class TemasScreen extends StatefulWidget {
-  const TemasScreen({super.key});
+class TemasHomeTab extends StatefulWidget {
+  const TemasHomeTab({super.key});
 
   @override
-  State<TemasScreen> createState() => _TemasScreenState();
+  State<TemasHomeTab> createState() => _TemasHomeTabState();
 }
 
-class _TemasScreenState extends State<TemasScreen> {
+class _TemasHomeTabState extends State<TemasHomeTab> {
   final TextEditingController _searchController = TextEditingController();
 
   static const List<Map<String, dynamic>> allThemes = [

@@ -3,31 +3,28 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
-import 'package:plus_vocab/features/pratica/exercicio/models/practice_session_models.dart';
+import 'package:plus_vocab/features/pratica/exercicio/data/vocab_practice_service.dart';
 import 'package:plus_vocab/features/pratica/exercicio/views/practice_session_screen.dart';
+import 'package:provider/provider.dart';
 
-/// Tela exibida ao iniciar uma prática. Por enquanto usa um atraso fixo; no futuro,
-/// substituir por espera ao endpoint de iniciar sessão.
+/// Tela exibida ao iniciar uma prática: chama `POST /vocab/practice/start` e abre a sessão.
 class PracticeSessionLoadingScreen extends StatefulWidget {
   const PracticeSessionLoadingScreen({
     super.key,
-    required this.session,
+    required this.themeId,
     required this.practiceTitle,
   });
 
-  final PracticeSessionPayload session;
+  final String themeId;
   final String practiceTitle;
 
   @override
   State<PracticeSessionLoadingScreen> createState() => _PracticeSessionLoadingScreenState();
 }
 
-class _PracticeSessionLoadingScreenState extends State<PracticeSessionLoadingScreen>
-    with SingleTickerProviderStateMixin {
-  static const Duration _mockWait = Duration(seconds: 30);
+class _PracticeSessionLoadingScreenState extends State<PracticeSessionLoadingScreen> {
   static const Duration _phraseInterval = Duration(seconds: 5);
 
-  late final AnimationController _progressController;
   int _phraseIndex = 0;
   Timer? _phraseTimer;
 
@@ -43,33 +40,47 @@ class _PracticeSessionLoadingScreenState extends State<PracticeSessionLoadingScr
   @override
   void initState() {
     super.initState();
-    _progressController = AnimationController(vsync: this, duration: _mockWait)..forward();
-
     _phraseTimer = Timer.periodic(_phraseInterval, (_) {
       if (!mounted) return;
       setState(() {
         _phraseIndex = (_phraseIndex + 1) % _phrases.length;
       });
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _carregarSessao());
+  }
 
-    // TODO(RF-21): substituir o delay por `await` ao endpoint de iniciar prática; manter esta tela até a resposta.
-    Future<void>.delayed(_mockWait, () {
+  Future<void> _carregarSessao() async {
+    try {
+      final service = context.read<VocabPracticeService>();
+      final session = await service.iniciarSessao(themeId: widget.themeId);
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(
           builder: (context) => PracticeSessionScreen(
-            session: widget.session,
+            session: session,
             practiceTitle: widget.practiceTitle,
+            themeId: widget.themeId,
           ),
         ),
       );
-    });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString(),
+            style: GoogleFonts.lexend(color: AppColors.branco),
+          ),
+          backgroundColor: AppColors.erro,
+        ),
+      );
+      Navigator.of(context).pop();
+    }
   }
 
   @override
   void dispose() {
     _phraseTimer?.cancel();
-    _progressController.dispose();
     super.dispose();
   }
 
@@ -112,21 +123,27 @@ class _PracticeSessionLoadingScreenState extends State<PracticeSessionLoadingScr
                       color: AppColors.primaria,
                     ),
                   ),
-                  const SizedBox(height: 40),
-                  AnimatedBuilder(
-                    animation: _progressController,
-                    builder: (context, child) {
-                      return SizedBox(
-                        width: 96,
-                        height: 96,
-                        child: CircularProgressIndicator(
-                          value: _progressController.value,
-                          strokeWidth: 6,
-                          color: AppColors.primaria,
-                          backgroundColor: AppColors.bordaCampo,
-                        ),
-                      );
-                    },
+                  const SizedBox(height: 24),
+                  Text(
+                    'Nossa inteligência artificial está elaborando exercícios personalizados '
+                    'com base no seu tema. Isso pode levar alguns instantes — aguarde, por favor.',
+                    textAlign: TextAlign.center,
+                    style: theme.copyWith(
+                      fontSize: 14,
+                      height: 1.5,
+                      color: AppColors.textoSecundario,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  const SizedBox(
+                    width: 96,
+                    height: 96,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 6,
+                      color: AppColors.primaria,
+                      backgroundColor: AppColors.bordaCampo,
+                    ),
                   ),
                   const SizedBox(height: 28),
                   Expanded(
@@ -144,14 +161,6 @@ class _PracticeSessionLoadingScreenState extends State<PracticeSessionLoadingScr
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                  Text(
-                    'Aguarde… em breve isso refletirá o carregamento real da partida.',
-                    textAlign: TextAlign.center,
-                    style: theme.copyWith(
-                      fontSize: 12,
-                      color: AppColors.textoSuave,
                     ),
                   ),
                 ],

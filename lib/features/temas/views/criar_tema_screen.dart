@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
+import 'package:plus_vocab/features/pratica/exercicio/views/practice_session_screen.dart';
 import 'package:plus_vocab/features/temas/controllers/temas_controller.dart';
 import 'package:plus_vocab/features/temas/components/seletor_modalidades.dart';
 import 'package:plus_vocab/features/temas/components/seletor_dificuldade.dart';
@@ -79,7 +80,7 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
     final controller = context.read<TemasController>();
     final modalidades = _selecionados.map((m) => _modalidadeMap[m]!).toList();
 
-    final pratica = await controller.criarTemaEIniciarPratica(
+    final resultado = await controller.criarTemaEIniciarPratica(
       nome: _tituloController.text.trim(),
       descricao: _contextoController.text.trim(),
       modalidades: modalidades,
@@ -87,10 +88,16 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
 
     if (!mounted) return;
 
-    if (pratica != null) {
-      // TODO: navegar para a tela de exercícios passando pratica
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Prática iniciada!'), backgroundColor: AppColors.acerto),
+    if (resultado != null) {
+      final titulo = _tituloController.text.trim();
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (context) => PracticeSessionScreen(
+            session: resultado.session,
+            practiceTitle: titulo,
+            themeId: resultado.themeId,
+          ),
+        ),
       );
     } else {
       _mostrarErro(controller.errorMessage ?? 'Erro ao criar tema.');

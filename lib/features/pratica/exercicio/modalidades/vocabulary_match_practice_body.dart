@@ -32,21 +32,34 @@ class VocabularyMatchPracticeBody extends StatelessWidget {
             child: Row(
               children: List.generate(question.words.length, (i) {
                 final selected = selectedWordIndex == i;
+                final isPaired = associations.any((a) => a == i);
+                final Color fillColor = isPaired ? AppColors.primaria : AppColors.branco;
+                final Color labelColor = isPaired ? AppColors.branco : AppColors.textoPreto;
+                final Color borderColor = isPaired
+                    ? (selected ? AppColors.branco : AppColors.primaria)
+                    : (selected ? AppColors.primaria : AppColors.bordaCampo);
+                final double borderWidth = selected ? 2 : 1;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: Material(
-                    color: AppColors.branco,
+                    color: fillColor,
                     borderRadius: BorderRadius.circular(10),
                     child: InkWell(
                       onTap: () => onWordTap(i),
                       borderRadius: BorderRadius.circular(10),
+                      splashColor: isPaired
+                          ? AppColors.branco.withValues(alpha: 0.2)
+                          : AppColors.primaria.withValues(alpha: 0.12),
+                      highlightColor: isPaired
+                          ? AppColors.branco.withValues(alpha: 0.1)
+                          : AppColors.primaria.withValues(alpha: 0.06),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: selected ? AppColors.primaria : AppColors.bordaCampo,
-                            width: selected ? 2 : 1,
+                            color: borderColor,
+                            width: borderWidth,
                           ),
                         ),
                         child: Text(
@@ -54,7 +67,7 @@ class VocabularyMatchPracticeBody extends StatelessWidget {
                           style: GoogleFonts.lexend(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textoPreto,
+                            color: labelColor,
                           ),
                         ),
                       ),

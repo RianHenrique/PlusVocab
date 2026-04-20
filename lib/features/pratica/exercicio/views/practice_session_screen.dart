@@ -1,20 +1,25 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/features/pratica/exercicio/layout/exercise_practice_shell.dart';
 import 'package:plus_vocab/features/pratica/exercicio/logic/practice_session_exercise_adapters.dart';
+import 'package:plus_vocab/features/pratica/exercicio/modalidades/dialogue_completion_practice_body.dart';
 import 'package:plus_vocab/features/pratica/exercicio/modalidades/fill_in_the_blanks_practice_body.dart';
 import 'package:plus_vocab/features/pratica/exercicio/modalidades/listening_comprehension_practice_body.dart';
 import 'package:plus_vocab/features/pratica/exercicio/modalidades/vocabulary_match_practice_body.dart';
 import 'package:plus_vocab/features/pratica/exercicio/models/fill_in_the_blanks_models.dart';
 import 'package:plus_vocab/features/pratica/exercicio/models/listening_comprehension_models.dart';
+import 'package:plus_vocab/features/pratica/exercicio/data/vocab_practice_service.dart';
+import 'package:plus_vocab/features/pratica/exercicio/models/dialogue_completion_models.dart';
 import 'package:plus_vocab/features/pratica/exercicio/models/practice_session_models.dart';
 import 'package:plus_vocab/features/pratica/exercicio/models/vocabulary_match_models.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:plus_vocab/features/pratica/exercicio/views/practice_session_loading_screen.dart';
 import 'package:plus_vocab/features/pratica/exercicio/views/practice_session_summary_screen.dart';
-
-// TODO(RF-21): ao integrar o backend, receber [PracticeSessionPayload] da API ao iniciar a prática
-// e, ao finalizar, enviar [PracticeSessionOutcome.toRequestBody()] no endpoint de resultado.
+import 'package:provider/provider.dart';
 
 class _ExerciseSlotState {
   List<int?>? vocabularyAssociations;
@@ -26,6 +31,11 @@ class _ExerciseSlotState {
   int? listeningSubmitted;
 
   String fillDraft = '';
+
+  String dialogueCommittedTranscript = '';
+  String dialogueLiveTranscript = '';
+  bool dialogueListening = false;
+  bool? dialogueTranscriptFeedback;
 }
 
 /// Orquestra a lista de exercícios da sessão: respostas em memória, correção local e fluxo até o resumo.
@@ -34,10 +44,14 @@ class PracticeSessionScreen extends StatefulWidget {
     super.key,
     required this.session,
     this.practiceTitle = 'Prática PlusVocab',
+    this.themeId,
   });
 
   final PracticeSessionPayload session;
   final String practiceTitle;
+
+  /// Identificador do tema na API; usado para nova partida e fluxo que vem da lista de temas.
+  final String? themeId;
 
   @override
   State<PracticeSessionScreen> createState() => _PracticeSessionScreenState();
@@ -55,6 +69,11 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
   /// Ordem embaralhada fixa por índice (evita re-sort a cada rebuild).
   final Map<int, VocabularyMatchQuestion> _vocabularyQuestionByIndex = {};
   final Map<int, ListeningComprehensionQuestion> _listeningQuestionByIndex = {};
+  final Map<int, DialogueCompletionQuestion> _dialogueQuestionByIndex = {};
+
+  final stt.SpeechToText _dialogueSpeech = stt.SpeechToText();
+  bool _dialogueSpeechReady = false;
+  String _dialogueListenLocaleId = 'en_US';
 
   PracticeSessionPayload get _session => widget.session;
 
@@ -76,6 +95,143 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
     );
   }
 
+  DialogueCompletionQuestion _dialogueQuestionForIndex(int index) {
+    return _dialogueQuestionByIndex.putIfAbsent(
+      index,
+      () => PracticeSessionExerciseAdapters.dialogueCompletionFromItem(_session.exercicios[index]),
+    );
+  }
+
+  String _dialogueDisplayTranscript(_ExerciseSlotState slot) {
+    if (slot.dialogueListening && slot.dialogueLiveTranscript.isNotEmpty) {
+      return slot.dialogueLiveTranscript;
+    }
+    if (slot.dialogueCommittedTranscript.isNotEmpty) {
+      return slot.dialogueCommittedTranscript;
+    }
+    return slot.dialogueLiveTranscript;
+  }
+
+  Future<void> _initDialogueSpeech() async {
+    final ok = await _dialogueSpeech.initialize(
+      onStatus: (_) {},
+      onError: (_) {
+        if (mounted) setState(() {});
+      },
+    );
+    if (ok) {
+      final locales = await _dialogueSpeech.locales();
+      _dialogueListenLocaleId = DialogueCompletionSpeechLocales.pickInstalledOrFallback(
+        locales.map((e) => e.localeId),
+        'en-US',
+      );
+    }
+    if (!mounted) return;
+    setState(() => _dialogueSpeechReady = ok);
+  }
+
+  Future<void> _ensureDialogueSpeechReady() async {
+    if (_dialogueSpeechReady) return;
+    await _initDialogueSpeech();
+    if (_dialogueSpeechReady || !mounted) return;
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    if (!mounted) return;
+    await _initDialogueSpeech();
+  }
+
+  Future<void> _playDialogueLine(int index) async {
+    if (_currentIndex < 0 || _currentIndex >= _total) return;
+    if (_session.exercicios[_currentIndex].modalidade != PracticeExerciseModality.dialogueCompletion) {
+      return;
+    }
+    final q = _dialogueQuestionForIndex(_currentIndex);
+    if (index < 0 || index >= q.obscuredLineAudios.length) return;
+    await _tts.setLanguage(q.ttsLanguage);
+    await _tts.setSpeechRate(0.48);
+    await _tts.setVolume(1.0);
+    await _tts.setPitch(1.0);
+    await _tts.stop();
+    await _tts.speak(q.obscuredLineAudios[index]);
+  }
+
+  Future<void> _dialogueMicDown() async {
+    await _ensureDialogueSpeechReady();
+    if (!_dialogueSpeechReady) {
+      if (!mounted) return;
+      final err = _dialogueSpeech.lastError;
+      final hint = err != null
+          ? '\n\nDetalhe técnico: ${err.errorMsg}'
+          : '\n\nConfira se o reconhecimento de voz do Google está ativo e atualizado nas configurações do Android.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          duration: const Duration(seconds: 6),
+          content: Text(
+            'Não foi possível iniciar o reconhecimento de fala do aparelho. '
+            'No Android, além do microfone, o sistema precisa do serviço de voz (em geral pelo app Google). '
+            'Confira se ele está instalado e atualizado e se o idioma de entrada inclui inglês.$hint',
+            style: GoogleFonts.lexend(color: AppColors.branco, height: 1.35),
+          ),
+          backgroundColor: AppColors.erro,
+        ),
+      );
+      return;
+    }
+    final slot = _slots[_currentIndex];
+    setState(() {
+      slot.dialogueTranscriptFeedback = null;
+      slot.dialogueListening = true;
+      slot.dialogueLiveTranscript = '';
+    });
+    await _dialogueSpeech.stop();
+    await _dialogueSpeech.listen(
+      localeId: _dialogueListenLocaleId,
+      onResult: (result) {
+        if (!mounted) return;
+        setState(() {
+          final s = _slots[_currentIndex];
+          s.dialogueLiveTranscript = result.recognizedWords;
+          if (result.finalResult && result.recognizedWords.trim().isNotEmpty) {
+            s.dialogueCommittedTranscript = result.recognizedWords.trim();
+          }
+        });
+      },
+      listenOptions: stt.SpeechListenOptions(
+        listenMode: stt.ListenMode.dictation,
+        partialResults: true,
+        cancelOnError: true,
+      ),
+    );
+  }
+
+  Future<void> _dialogueMicUp() async {
+    final slot = _slots[_currentIndex];
+    if (!slot.dialogueListening) return;
+    await _dialogueSpeech.stop();
+    if (!mounted) return;
+    setState(() {
+      slot.dialogueListening = false;
+      final fallback = slot.dialogueLiveTranscript.trim();
+      if (slot.dialogueCommittedTranscript.isEmpty && fallback.isNotEmpty) {
+        slot.dialogueCommittedTranscript = fallback;
+      }
+      slot.dialogueLiveTranscript = '';
+    });
+  }
+
+  void _skipDialogueExercise() {
+    if (_isBetweenExercises) return;
+    if (_currentItem.modalidade != PracticeExerciseModality.dialogueCompletion) return;
+    final slot = _slots[_currentIndex];
+    unawaited(_dialogueSpeech.stop());
+    setState(() {
+      slot.dialogueListening = false;
+      slot.dialogueLiveTranscript = '';
+      slot.dialogueCommittedTranscript = '-';
+      slot.dialogueTranscriptFeedback = false;
+    });
+    _onPrimarySubmit();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -87,12 +243,20 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
       if (mounted) setState(() => _listeningSpeaking = false);
     });
     _syncFillControllerFromSlot();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _initDialogueSpeech();
+      if (!_dialogueSpeechReady && mounted) {
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+        if (mounted) await _initDialogueSpeech();
+      }
+    });
   }
 
   @override
   void dispose() {
     _fillController.dispose();
     _tts.stop();
+    _dialogueSpeech.stop();
     super.dispose();
   }
 
@@ -112,7 +276,15 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
   void _goToIndex(int nextIndex, {bool clearTransitionLock = false}) {
     if (nextIndex < 0 || nextIndex >= _total) return;
     _persistFillDraftBeforeLeave(_currentIndex);
+    final leavingDialogue =
+        _session.exercicios[_currentIndex].modalidade == PracticeExerciseModality.dialogueCompletion;
+    if (leavingDialogue) {
+      unawaited(_dialogueSpeech.stop());
+    }
     setState(() {
+      if (leavingDialogue) {
+        _slots[_currentIndex].dialogueListening = false;
+      }
       _currentIndex = nextIndex;
       if (clearTransitionLock) {
         _isBetweenExercises = false;
@@ -148,6 +320,8 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
         return _slots[_currentIndex].listeningSelected != null;
       case PracticeExerciseModality.fillBlanks:
         return _fillController.text.trim().isNotEmpty;
+      case PracticeExerciseModality.dialogueCompletion:
+        return _slots[_currentIndex].dialogueCommittedTranscript.trim().isNotEmpty;
       default:
         return false;
     }
@@ -176,7 +350,10 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
         );
       },
     );
-    if (leave == true && mounted) Navigator.of(context).pop();
+    if (leave == true && mounted) {
+      unawaited(_dialogueSpeech.stop());
+      Navigator.of(context).pop();
+    }
   }
 
   void _showInfoSheet(String title, String body) {
@@ -231,6 +408,12 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
         _showInfoSheet(
           'Fill in the Blanks',
           'Complete a lacuna usando o campo abaixo. A resposta é comparada ao gabarito recebido do backend.',
+        );
+        break;
+      case PracticeExerciseModality.dialogueCompletion:
+        _showInfoSheet(
+          'Dialogue Completion',
+          DialogueCompletionPracticeCopy.infoSheetInstructions,
         );
         break;
       default:
@@ -353,6 +536,26 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
         _afterRecorded(ok, longIncorrectMessage: detail != null);
         return;
 
+      case PracticeExerciseModality.dialogueCompletion:
+        final q = _dialogueQuestionForIndex(_currentIndex);
+        final spoken = slot.dialogueCommittedTranscript.trim();
+        if (spoken.isEmpty) return;
+        final ok = DialogueCompletionEvaluation.matchesTranscript(
+          userTranscript: spoken,
+          acceptedAnswers: q.acceptedAnswers,
+        );
+        setState(() => slot.dialogueTranscriptFeedback = ok);
+        _resultados[_currentIndex] = ExerciseResultEntry(
+          palavrasChave: List<String>.from(item.palavrasChave),
+          modalidade: item.modalidade,
+          foiCorreto: ok,
+        );
+        const detail =
+            'Sua fala não bateu com as respostas esperadas. Ouça as opções de novo e tente outra formulação.';
+        _snack(ok, incorrectDetail: ok ? null : detail);
+        _afterRecorded(ok, longIncorrectMessage: !ok);
+        return;
+
       default:
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -420,16 +623,74 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
       totalExercicios: _total,
     );
 
-    // TODO(RF-21): enviar respostas ao backend antes de exibir o resumo.
-    // final client = ApiClient();
-    // await client.post(
-    //   '/practice/sessions/${outcome.practiceSessionId}/answers',
-    //   data: outcome.toRequestBody(),
-    // );
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return PopScope(
+          canPop: false,
+          child: AlertDialog(
+            content: Row(
+              children: [
+                const SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: AppColors.primaria,
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Text(
+                    'Enviando seu desempenho para a nuvem…',
+                    style: GoogleFonts.lexend(
+                      fontSize: 15,
+                      height: 1.35,
+                      color: AppColors.textoPreto,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    try {
+      await context.read<VocabPracticeService>().submeterResultados(outcome);
+    } catch (e) {
+      if (mounted) {
+        await showDialog<void>(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text('Envio do resultado', style: GoogleFonts.lexend(fontWeight: FontWeight.bold)),
+              content: Text(
+                'Não foi possível registrar o resultado no servidor.\n\n$e',
+                style: GoogleFonts.lexend(height: 1.35),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text('OK', style: GoogleFonts.lexend(color: AppColors.primaria)),
+                ),
+              ],
+            );
+          },
+        );
+      }
+    } finally {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+    }
 
     if (!mounted) return;
     final sessionForReplay = _session;
     final titleForReplay = widget.practiceTitle;
+    final themeIdForReplay = widget.themeId;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
         builder: (context) => PracticeSessionSummaryScreen(
@@ -437,14 +698,25 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
           lessonTitle: titleForReplay,
           onLeavePractice: () => Navigator.of(context).pop(),
           onStartNewMatch: () {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute<void>(
-                builder: (context) => PracticeSessionScreen(
-                  session: sessionForReplay,
-                  practiceTitle: titleForReplay,
+            if (themeIdForReplay != null) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute<void>(
+                  builder: (context) => PracticeSessionLoadingScreen(
+                    themeId: themeIdForReplay,
+                    practiceTitle: titleForReplay,
+                  ),
                 ),
-              ),
-            );
+              );
+            } else {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute<void>(
+                  builder: (context) => PracticeSessionScreen(
+                    session: sessionForReplay,
+                    practiceTitle: titleForReplay,
+                  ),
+                ),
+              );
+            }
           },
         ),
       ),
@@ -528,6 +800,34 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
           },
           fieldBorderColor: _fillBorderColor(item),
         );
+
+      case PracticeExerciseModality.dialogueCompletion:
+        try {
+          final q = _dialogueQuestionForIndex(_currentIndex);
+          final slot = _slots[_currentIndex];
+          return DialogueCompletionPracticeBody(
+            promptLine: q.promptLine,
+            lineCount: q.obscuredLineAudios.length,
+            onPlayLine: _playDialogueLine,
+            userTranscript: _dialogueDisplayTranscript(slot),
+            isListening: slot.dialogueListening,
+            onMicPointerDown: () => _dialogueMicDown(),
+            onMicPointerUpOrCancel: () => _dialogueMicUp(),
+            transcriptFeedbackCorrect: slot.dialogueTranscriptFeedback,
+            onSkip: _skipDialogueExercise,
+          );
+        } on StateError catch (e) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                'Não foi possível montar este exercício.\n\n$e',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.lexend(fontSize: 14, color: AppColors.erro, height: 1.35),
+              ),
+            ),
+          );
+        }
 
       default:
         return Center(

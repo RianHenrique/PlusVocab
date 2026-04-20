@@ -11,6 +11,38 @@ class PracticeSessionPayload {
   final List<String> sugestoesPalavras;
 
   int get totalExercicios => exercicios.length;
+
+  /// Aceita o JSON raiz da sessão ou um envelope `{ "success": true, "data": { ... } }`.
+  factory PracticeSessionPayload.fromApi(dynamic raw) {
+    if (raw is! Map<String, dynamic>) {
+      throw const FormatException('Resposta de prática inválida.');
+    }
+    Map<String, dynamic> root = raw;
+    final data = raw['data'];
+    if (data is Map<String, dynamic> &&
+        (data['practiceSessionId'] != null || data['exercicios'] != null)) {
+      root = data;
+    }
+    final id = root['practiceSessionId']?.toString() ?? '';
+    if (id.isEmpty) {
+      throw const FormatException('Sessão de prática sem practiceSessionId.');
+    }
+    final exRaw = root['exercicios'];
+    final exercicios = exRaw is List
+        ? exRaw
+            .whereType<Map<String, dynamic>>()
+            .map(PracticeExerciseItem.fromJson)
+            .toList()
+        : <PracticeExerciseItem>[];
+    final sugRaw = root['sugestoes_palavras'];
+    final sugestoes =
+        sugRaw is List ? sugRaw.map((e) => e.toString()).toList() : <String>[];
+    return PracticeSessionPayload(
+      practiceSessionId: id,
+      exercicios: exercicios,
+      sugestoesPalavras: sugestoes,
+    );
+  }
 }
 
 class PracticeExerciseItem {
@@ -83,12 +115,9 @@ class PracticeSessionOutcome {
   final int totalCorretos;
   final int totalExercicios;
 
-  Map<String, dynamic> toRequestBody() => {
-        'practiceSessionId': practiceSessionId,
+  /// Corpo esperado por `POST /vocab/practice/{practiceSessionId}/submit`.
+  Map<String, dynamic> toSubmitBody() => {
         'resultados': resultados.map((e) => e.toJson()).toList(),
-        'totalCorretos': totalCorretos,
-        'totalExercicios': totalExercicios,
-        'sugestoes_palavras': sugestoesPalavras,
       };
 }
 

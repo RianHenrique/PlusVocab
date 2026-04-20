@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'features/auth/controllers/auth_controller.dart';
 import 'features/auth/models/auth_service.dart';
 import 'features/auth/views/signin_screen.dart';
+import 'features/pratica/exercicio/data/vocab_practice_service.dart';
 import 'features/temas/models/temas_service.dart';
 import 'features/temas/controllers/temas_controller.dart';
 import 'core/services/api_client.dart';
@@ -47,12 +48,19 @@ void main() {
           create: (context) => TemasService(context.read<ApiClient>()),
         ),
 
+        Provider<VocabPracticeService>(
+          create: (context) => VocabPracticeService(context.read<ApiClient>()),
+        ),
+
         // --- NÍVEL DE CONTROLLER ("C") ---
         ChangeNotifierProvider(
           create: (context) => AuthController(context.read<AuthService>()),
         ),
         ChangeNotifierProvider(
-          create: (context) => TemasController(context.read<TemasService>()),
+          create: (context) => TemasController(
+            context.read<TemasService>(),
+            context.read<VocabPracticeService>(),
+          ),
         ),
       ],
       child: const MyApp(),

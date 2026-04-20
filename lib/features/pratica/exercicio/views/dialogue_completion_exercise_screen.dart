@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -57,7 +59,13 @@ class _DialogueCompletionExerciseScreenState extends State<DialogueCompletionExe
     widget.question.assertValid();
     _tts = FlutterTts();
     _configureTts();
-    _initSpeech();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _initSpeech();
+      if (!_speechAvailable && mounted) {
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+        if (mounted) await _initSpeech();
+      }
+    });
   }
 
   Future<void> _configureTts() async {
@@ -87,6 +95,15 @@ class _DialogueCompletionExerciseScreenState extends State<DialogueCompletionExe
     setState(() => _speechAvailable = ok);
   }
 
+  Future<void> _ensureSpeechReady() async {
+    if (_speechAvailable) return;
+    await _initSpeech();
+    if (_speechAvailable || !mounted) return;
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    if (!mounted) return;
+    await _initSpeech();
+  }
+
   Future<void> _playLine(int index) async {
     if (index < 0 || index >= widget.question.obscuredLineAudios.length) return;
     await _tts.stop();
@@ -94,13 +111,18 @@ class _DialogueCompletionExerciseScreenState extends State<DialogueCompletionExe
   }
 
   Future<void> _onMicDown() async {
+    await _ensureSpeechReady();
     if (!_speechAvailable) {
       if (!mounted) return;
+      final err = _speech.lastError;
+      final hint = err != null ? '\n(${err.errorMsg})' : '';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          duration: const Duration(seconds: 6),
           content: Text(
-            'Reconhecimento de voz indisponível. Verifique permissões ou tente em outro dispositivo.',
-            style: GoogleFonts.lexend(color: AppColors.branco),
+            'Não foi possível iniciar o reconhecimento de fala. '
+            'No Android, verifique o app Google, permissão de microfone e idioma de entrada (inglês).$hint',
+            style: GoogleFonts.lexend(color: AppColors.branco, height: 1.35),
           ),
           backgroundColor: AppColors.erro,
         ),
@@ -149,6 +171,18 @@ class _DialogueCompletionExerciseScreenState extends State<DialogueCompletionExe
       }
       _liveTranscript = '';
     });
+  }
+
+  Future<void> _onSkip() async {
+    await _speech.stop();
+    if (!mounted) return;
+    setState(() {
+      _listening = false;
+      _liveTranscript = '';
+      _committedTranscript = '-';
+      _feedbackCorrect = false;
+    });
+    _onSubmit();
   }
 
   void _onSubmit() {
@@ -264,6 +298,7 @@ class _DialogueCompletionExerciseScreenState extends State<DialogueCompletionExe
         onMicPointerDown: _onMicDown,
         onMicPointerUpOrCancel: _onMicUp,
         transcriptFeedbackCorrect: _feedbackCorrect,
+        onSkip: _onSkip,
       ),
       canSubmit: _canSubmit,
       onSubmit: _onSubmit,

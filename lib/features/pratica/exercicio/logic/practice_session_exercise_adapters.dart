@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:plus_vocab/features/pratica/exercicio/models/dialogue_completion_models.dart';
 import 'package:plus_vocab/features/pratica/exercicio/models/fill_in_the_blanks_models.dart';
 import 'package:plus_vocab/features/pratica/exercicio/models/listening_comprehension_models.dart';
 import 'package:plus_vocab/features/pratica/exercicio/models/practice_session_models.dart';
@@ -87,6 +88,81 @@ abstract final class PracticeSessionExerciseAdapters {
       options: shuffledOptions,
       correctOptionIndex: correctAfterShuffle,
     );
+  }
+
+  /// Monta Dialogue Completion a partir do item da sessão.
+  ///
+  /// Espera típico: [questao] = fala em destaque; [options] = lista de textos para TTS (opções
+  /// “ocultas”); [gabarito] e/ou [palavras_chave] = respostas aceitas na fala (várias frases
+  /// separadas por `|`, `;` ou quebra de linha em [gabarito]).
+  static DialogueCompletionQuestion dialogueCompletionFromItem(PracticeExerciseItem item) {
+    var promptLine = item.questao?.trim() ?? '';
+    if (promptLine.isEmpty) {
+      promptLine = item.text?.trim() ?? '';
+    }
+    var obscuredLineAudios = _dialogueAudioLines(item.options);
+    if (obscuredLineAudios.isEmpty) {
+      final script = item.text?.trim() ?? '';
+      if (script.isNotEmpty) {
+        obscuredLineAudios = [script];
+      }
+    }
+    if (obscuredLineAudios.isEmpty) {
+      throw StateError(
+        'dialogue_completion inválido: informe "options" (lista de falas) ou "text" com conteúdo.',
+      );
+    }
+
+    final acceptedAnswers = <String>[];
+    final gabarito = item.gabarito?.trim() ?? '';
+    if (gabarito.isNotEmpty) {
+      acceptedAnswers.addAll(_splitAcceptedPhrases(gabarito));
+    }
+    for (final p in item.palavrasChave) {
+      final t = p.trim();
+      if (t.isEmpty) continue;
+      final dup = acceptedAnswers.any((a) => _norm(a) == _norm(t));
+      if (!dup) acceptedAnswers.add(t);
+    }
+    if (acceptedAnswers.isEmpty) {
+      throw StateError(
+        'dialogue_completion inválido: informe "gabarito" e/ou "palavras_chave" para validar a fala.',
+      );
+    }
+
+    if (promptLine.isEmpty) {
+      promptLine = 'Ouça as opções e responda em voz alta em inglês.';
+    }
+
+    return DialogueCompletionQuestion(
+      promptLine: promptLine,
+      obscuredLineAudios: obscuredLineAudios,
+      acceptedAnswers: acceptedAnswers,
+      ttsLanguage: 'en-US',
+    );
+  }
+
+  static List<String> _splitAcceptedPhrases(String gabarito) {
+    final parts = gabarito.split(RegExp(r'[|;\n]+'));
+    return parts.map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+  }
+
+  static List<String> _dialogueAudioLines(Object? raw) {
+    if (raw is! List) return const [];
+    final out = <String>[];
+    for (final e in raw) {
+      if (e is String) {
+        final t = e.trim();
+        if (t.isNotEmpty) out.add(t);
+      } else if (e is Map) {
+        final t = (e['text'] ?? e['audio'] ?? e['line'] ?? e['utterance'])?.toString().trim() ?? '';
+        if (t.isNotEmpty) out.add(t);
+      } else if (e is List && e.isNotEmpty) {
+        final t = e.first.toString().trim();
+        if (t.isNotEmpty) out.add(t);
+      }
+    }
+    return out;
   }
 
   static FillInTheBlanksQuestion fillBlanksFromItem(PracticeExerciseItem item) {

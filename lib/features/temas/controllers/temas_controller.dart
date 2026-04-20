@@ -1,15 +1,57 @@
 import 'package:flutter/foundation.dart';
+import 'package:plus_vocab/features/pratica/exercicio/data/vocab_practice_service.dart';
+import 'package:plus_vocab/features/pratica/exercicio/models/practice_session_models.dart';
+import '../models/tema_resumo.dart';
 import '../models/temas_service.dart';
 
 class TemasController extends ChangeNotifier {
   final TemasService _temasService;
-  TemasController(this._temasService);
+  final VocabPracticeService _vocabPracticeService;
+  TemasController(this._temasService, this._vocabPracticeService);
 
   bool _isLoading = false;
   String? _errorMessage;
 
+  bool _isLoadingListaTemas = false;
+  String? _errorListaTemas;
+  List<TemaResumo>? _temasEmMemoria;
+
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+
+  bool get isLoadingListaTemas => _isLoadingListaTemas;
+  String? get errorListaTemas => _errorListaTemas;
+
+  List<TemaResumo> get temasEmMemoria =>
+      List<TemaResumo>.unmodifiable(_temasEmMemoria ?? const []);
+
+  bool get temasListaJaCarregada => _temasEmMemoria != null;
+
+  void invalidarListaTemasEmMemoria() {
+    _temasEmMemoria = null;
+    _errorListaTemas = null;
+    notifyListeners();
+  }
+
+  Future<void> carregarListaTemasSeNecessario() async {
+    if (_temasEmMemoria != null) return;
+    await forcarAtualizacaoListaTemas();
+  }
+
+  Future<void> forcarAtualizacaoListaTemas() async {
+    _isLoadingListaTemas = true;
+    _errorListaTemas = null;
+    notifyListeners();
+
+    try {
+      _temasEmMemoria = await _temasService.listarTemas();
+    } catch (e) {
+      _errorListaTemas = e.toString();
+    } finally {
+      _isLoadingListaTemas = false;
+      notifyListeners();
+    }
+  }
 
   // Apenas cria o tema e retorna o id
   Future<String?> criarTema({
@@ -27,6 +69,7 @@ class TemasController extends ChangeNotifier {
         descricao: descricao,
         modalidades: modalidades,
       );
+      invalidarListaTemasEmMemoria();
       return tema['id'] as String;
     } catch (e) {
       _errorMessage = e.toString();
@@ -37,8 +80,8 @@ class TemasController extends ChangeNotifier {
     }
   }
 
-  // Cria o tema e já inicia a prática
-  Future<Map<String, dynamic>?> criarTemaEIniciarPratica({
+  /// Cria o tema e inicia a sessão de prática na API (`POST /vocab/practice/start`).
+  Future<({PracticeSessionPayload session, String themeId})?> criarTemaEIniciarPratica({
     required String nome,
     required String descricao,
     required List<String> modalidades,
@@ -53,12 +96,12 @@ class TemasController extends ChangeNotifier {
         descricao: descricao,
         modalidades: modalidades,
       );
+      invalidarListaTemasEmMemoria();
 
-      final pratica = await _temasService.iniciarPratica(
-        themeId: tema['id'] as String,
-      );
+      final themeId = tema['id'] as String;
+      final session = await _vocabPracticeService.iniciarSessao(themeId: themeId);
 
-      return pratica;
+      return (session: session, themeId: themeId);
     } catch (e) {
       _errorMessage = e.toString();
       return null;

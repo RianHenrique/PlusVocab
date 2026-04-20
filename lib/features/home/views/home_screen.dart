@@ -4,9 +4,8 @@ import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/components/profile_circle.dart';
 import 'package:plus_vocab/features/home/components/calendario_horizontal.dart';
 import 'package:plus_vocab/features/home/components/tab_selector.dart';
-import 'package:plus_vocab/features/home/views/temas_screen.dart';
-import 'package:plus_vocab/features/pratica/exercicio/data/mock_practice_session_data.dart';
-import 'package:plus_vocab/features/pratica/exercicio/views/practice_session_loading_screen.dart';
+import 'package:plus_vocab/features/home/views/temas_screen.dart'
+    show TemasHomeTab;
 import 'package:plus_vocab/features/temas/views/criar_tema_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -110,39 +109,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: () {
-                          // TODO(RF-21): GET/POST de sessão de prática — substituir mock por payload do backend.
-                          final session = MockPracticeSessionData.sample;
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (context) => PracticeSessionLoadingScreen(
-                                session: session,
-                                practiceTitle: 'Fui pra europa',
-                              ),
-                            ),
-                          );
-                        },
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.primaria,
-                          side: const BorderSide(color: AppColors.primaria),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: Text(
-                          'Iniciar exercício mock',
-                          style: GoogleFonts.lexend(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
                     const SizedBox(height: 40),
                     TabSelector(
                       selectedTab: _currentTab,
@@ -154,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 20),
                     _currentTab == 'Temas' 
-                        ? const TemasScreen() 
+                        ? const TemasHomeTab() 
                         : (_currentTab == 'Palavras' ? const Text("Palavras") : const Text("Progresso")),
                   ],
                 ),
