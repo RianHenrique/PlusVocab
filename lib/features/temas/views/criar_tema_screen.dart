@@ -35,7 +35,7 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
     "Vocabulary Match": "vocab_match",
     "Fill in the Blanks": "fill_blanks",
     "Dialogue Completion": "dialogue_completion",
-    "Listening Comprehension": "listening_comprehension",
+    "Listening Comprehension": "listening",
   };
 
   @override
