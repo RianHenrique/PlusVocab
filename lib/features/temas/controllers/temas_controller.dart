@@ -80,6 +80,52 @@ class TemasController extends ChangeNotifier {
     }
   }
 
+  Future<bool> atualizarTema({
+    required String id,
+    required String nome,
+    required String descricao,
+    required List<String> modalidades,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _temasService.atualizarTema(
+        id: id,
+        nome: nome,
+        descricao: descricao,
+        modalidades: modalidades,
+      );
+      invalidarListaTemasEmMemoria();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> deletarTema(String id) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _temasService.deletarTema(id);
+      _temasEmMemoria?.removeWhere((t) => t.id == id);
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   /// Cria o tema e inicia a sessão de prática na API (`POST /vocab/practice/start`).
   Future<({PracticeSessionPayload session, String themeId})?> criarTemaEIniciarPratica({
     required String nome,

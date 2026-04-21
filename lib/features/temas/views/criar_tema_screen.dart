@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
-import 'package:plus_vocab/features/pratica/exercicio/views/practice_session_screen.dart';
+import 'package:plus_vocab/features/pratica/exercicio/views/practice_session_loading_screen.dart';
 import 'package:plus_vocab/features/temas/controllers/temas_controller.dart';
+import 'package:plus_vocab/features/temas/models/tema_resumo.dart';
 import 'package:plus_vocab/features/temas/components/seletor_modalidades.dart';
-import 'package:plus_vocab/features/temas/components/seletor_dificuldade.dart';
+// import 'package:plus_vocab/features/temas/components/seletor_dificuldade.dart'; // TODO: reativar quando backend suportar dificuldade por tema
 import 'package:provider/provider.dart';
 
 class CriarTemaScreen extends StatefulWidget {
-  const CriarTemaScreen({super.key, required this.contexto});
+  const CriarTemaScreen({super.key, required this.contexto, this.temaParaEditar});
 
   final String contexto;
+  final TemaResumo? temaParaEditar;
+
+  bool get isEdicao => temaParaEditar != null;
 
   @override
   State<CriarTemaScreen> createState() => _CriarTemaScreenState();
@@ -19,10 +23,10 @@ class CriarTemaScreen extends StatefulWidget {
 class _CriarTemaScreenState extends State<CriarTemaScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final _tituloController = TextEditingController();
-  late TextEditingController _contextoController;
-  final List<String> _selecionados = [];
-  String _nivelFluencia = "Básico";
+  late final TextEditingController _tituloController;
+  late final TextEditingController _contextoController;
+  late final List<String> _selecionados;
+  // String _nivelFluencia = "Básico"; // TODO: reativar quando backend suportar dificuldade por tema
 
   final List<String> allOptions = [
     "Vocabulary Match",
@@ -31,7 +35,6 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
     "Listening Comprehension",
   ];
 
-  // Mapeia o nome exibido para o nome esperado pela API
   static const _modalidadeMap = {
     "Vocabulary Match": "vocab_match",
     "Fill in the Blanks": "fill_blanks",
@@ -39,10 +42,25 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
     "Listening Comprehension": "listening",
   };
 
+  static const _modalidadeMapInverso = {
+    "vocab_match": "Vocabulary Match",
+    "fill_blanks": "Fill in the Blanks",
+    "dialogue_completion": "Dialogue Completion",
+    "listening": "Listening Comprehension",
+  };
+
   @override
   void initState() {
     super.initState();
-    _contextoController = TextEditingController(text: widget.contexto);
+    final tema = widget.temaParaEditar;
+    _tituloController = TextEditingController(text: tema?.name ?? '');
+    _contextoController = TextEditingController(text: tema?.description ?? widget.contexto);
+    _selecionados = tema != null
+        ? tema.modalities
+            .map((m) => _modalidadeMapInverso[m.name] ?? m.name)
+            .where((m) => allOptions.contains(m))
+            .toList()
+        : [];
   }
 
   @override
@@ -79,23 +97,22 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
 
     final controller = context.read<TemasController>();
     final modalidades = _selecionados.map((m) => _modalidadeMap[m]!).toList();
+    final titulo = _tituloController.text.trim();
 
-    final resultado = await controller.criarTemaEIniciarPratica(
-      nome: _tituloController.text.trim(),
+    final themeId = await controller.criarTema(
+      nome: titulo,
       descricao: _contextoController.text.trim(),
       modalidades: modalidades,
     );
 
     if (!mounted) return;
 
-    if (resultado != null) {
-      final titulo = _tituloController.text.trim();
+    if (themeId != null) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(
-          builder: (context) => PracticeSessionScreen(
-            session: resultado.session,
+          builder: (_) => PracticeSessionLoadingScreen(
+            themeId: themeId,
             practiceTitle: titulo,
-            themeId: resultado.themeId,
           ),
         ),
       );
@@ -128,6 +145,31 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
     }
   }
 
+  Future<void> _atualizarTema() async {
+    if (!_validarCampos()) return;
+
+    final controller = context.read<TemasController>();
+    final modalidades = _selecionados.map((m) => _modalidadeMap[m]!).toList();
+
+    final ok = await controller.atualizarTema(
+      id: widget.temaParaEditar!.id,
+      nome: _tituloController.text.trim(),
+      descricao: _contextoController.text.trim(),
+      modalidades: modalidades,
+    );
+
+    if (!mounted) return;
+
+    if (ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tema atualizado com sucesso!'), backgroundColor: AppColors.acerto),
+      );
+      Navigator.of(context).pop(true);
+    } else {
+      _mostrarErro(controller.errorMessage ?? 'Erro ao atualizar tema.');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isLoading = context.watch<TemasController>().isLoading;
@@ -150,7 +192,10 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
               appBar: AppBar(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
-                title: Text("Criar um tema", style: GoogleFonts.lexend(color: AppColors.textoPreto, fontSize: 16)),
+                title: Text(
+                  widget.isEdicao ? "Editar tema" : "Criar um tema",
+                  style: GoogleFonts.lexend(color: AppColors.textoPreto, fontSize: 16),
+                ),
                 centerTitle: true,
                 leading: Padding(
                   padding: const EdgeInsets.only(left: 25.0),
@@ -205,44 +250,63 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
                                   });
                                 },
                               ),
-                              const SizedBox(height: 20),
-                              Text("Dificuldade", style: GoogleFonts.lexend(fontSize: 12, color: AppColors.textoPreto)),
-                              const SizedBox(height: 8),
-                              SeletorDificuldade(
-                                options: const ["Básico", "Intermediário", "Avançado"],
-                                selectedOption: _nivelFluencia,
-                                onOptionChange: (novoValor) {
-                                  setState(() => _nivelFluencia = novoValor);
-                                },
-                              ),
+                              // TODO: dificuldade é por perfil do usuário, não por tema — implementar quando backend suportar por tema
+                              // const SizedBox(height: 20),
+                              // Text("Dificuldade", style: GoogleFonts.lexend(fontSize: 12, color: AppColors.textoPreto)),
+                              // const SizedBox(height: 8),
+                              // SeletorDificuldade(
+                              //   options: const ["Básico", "Intermediário", "Avançado"],
+                              //   selectedOption: _nivelFluencia,
+                              //   onOptionChange: (novoValor) {
+                              //     setState(() => _nivelFluencia = novoValor);
+                              //   },
+                              // ),
                               const SizedBox(height: 40),
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.primaria,
-                                    foregroundColor: AppColors.branco,
-                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              if (widget.isEdicao) ...[
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.primaria,
+                                      foregroundColor: AppColors.branco,
+                                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    ),
+                                    onPressed: isLoading ? null : _atualizarTema,
+                                    child: isLoading
+                                        ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                        : Text("Salvar alterações", style: GoogleFonts.lexend(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.branco)),
                                   ),
-                                  onPressed: isLoading ? null : _criarEIniciar,
-                                  child: isLoading
-                                      ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                      : Text("Criar e iniciar partida", style: GoogleFonts.lexend(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.branco)),
                                 ),
-                              ),
-                              const SizedBox(height: 5),
-                              SizedBox(
-                                width: double.infinity,
-                                child: TextButton(
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ] else ...[
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.primaria,
+                                      foregroundColor: AppColors.branco,
+                                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    ),
+                                    onPressed: isLoading ? null : _criarEIniciar,
+                                    child: isLoading
+                                        ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                        : Text("Criar e iniciar partida", style: GoogleFonts.lexend(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.branco)),
                                   ),
-                                  onPressed: isLoading ? null : _apenascriarTema,
-                                  child: Text("Apenas criar o tema", style: GoogleFonts.lexend(fontSize: 14, fontWeight: FontWeight.normal, color: AppColors.primaria)),
                                 ),
-                              ),
+                                const SizedBox(height: 5),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: TextButton(
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    ),
+                                    onPressed: isLoading ? null : _apenascriarTema,
+                                    child: Text("Apenas criar o tema", style: GoogleFonts.lexend(fontSize: 14, fontWeight: FontWeight.normal, color: AppColors.primaria)),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
