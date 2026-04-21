@@ -10,6 +10,8 @@ import 'features/auth/views/signin_screen.dart';
 import 'features/pratica/exercicio/data/vocab_practice_service.dart';
 import 'features/temas/models/temas_service.dart';
 import 'features/temas/controllers/temas_controller.dart';
+import 'features/dicionario/models/dicionario_service.dart';
+import 'features/dicionario/controllers/dicionario_controller.dart';
 import 'core/services/api_client.dart';
 import 'core/services/storage_service.dart';
 
@@ -52,6 +54,10 @@ void main() {
           create: (context) => VocabPracticeService(context.read<ApiClient>()),
         ),
 
+        Provider<DicionarioService>(
+          create: (context) => DicionarioService(context.read<ApiClient>()),
+        ),
+
         // --- NÍVEL DE CONTROLLER ("C") ---
         ChangeNotifierProvider(
           create: (context) => AuthController(context.read<AuthService>()),
@@ -61,6 +67,9 @@ void main() {
             context.read<TemasService>(),
             context.read<VocabPracticeService>(),
           ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => DicionarioController(context.read<DicionarioService>()),
         ),
       ],
       child: const MyApp(),

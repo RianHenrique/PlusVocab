@@ -5,6 +5,7 @@ import 'package:plus_vocab/features/auth/views/signin_screen.dart';
 import 'package:plus_vocab/features/configs/views/about_screen.dart';
 import 'package:plus_vocab/features/home/views/home_screen.dart';
 import 'package:plus_vocab/features/temas/views/temas_screen.dart';
+import 'package:plus_vocab/features/dicionario/views/dicionario_screen.dart';
 import 'package:provider/provider.dart';
 
 import '../../auth/controllers/auth_controller.dart';
@@ -114,7 +115,9 @@ class _ConfigScreenState extends State<ConfigScreen> {
                       ),
                       _MenuRow(
                         title: 'Dicionário pessoal',
-                        onTap: () => _notImplemented('Dicionário pessoal'),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(builder: (_) => const DicionarioScreen()),
+                        ),
                       ),
                     ],
                   ),
