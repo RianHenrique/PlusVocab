@@ -1,8 +1,14 @@
-import '../../../core/services/api_client.dart';
-import 'package:flutter/foundation.dart';
-import '../../../core/common_models/user_model.dart';
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+
+import '../../../core/common_models/user_model.dart';
+import '../../../core/common_models/user_profile.dart';
+import '../../../core/services/api_client.dart';
 import '../../../core/services/storage_service.dart';
+import '../../temas/models/tema_resumo.dart';
+import 'authenticated_session.dart';
 
 class AuthService {
 
@@ -12,6 +18,48 @@ class AuthService {
   // final StorageService _storageService = StorageService();
 
   StorageService get storage => _storageService;
+
+  AuthenticatedSession _sessionFromAuthEnvelope(Map<String, dynamic> body) {
+    final user = User.fromJson(body);
+    UserProfile? profile;
+    final themes = <TemaResumo>[];
+    final data = body['data'];
+    if (data is Map<String, dynamic>) {
+      final rawProfile = data['profile'];
+      if (rawProfile is Map<String, dynamic>) {
+        profile = UserProfile.fromJson(rawProfile);
+      }
+      final rawThemes = data['themes'];
+      if (rawThemes is List<dynamic>) {
+        for (final item in rawThemes) {
+          if (item is Map) {
+            themes.add(TemaResumo.fromLoginSummary(Map<String, dynamic>.from(item)));
+          }
+        }
+      }
+    }
+    return AuthenticatedSession(user: user, profile: profile, themesFromLogin: themes);
+  }
+
+  Future<void> _persistAuthenticatedSession(AuthenticatedSession session) async {
+    await _storageService.saveAuthData(
+      accessToken: session.user.accessToken,
+      refreshToken: session.user.refreshToken,
+      userId: session.user.id,
+      userEmail: session.user.email,
+    );
+    final profileJson =
+        session.profile != null ? jsonEncode(session.profile!.toJson()) : null;
+    final themesJson = session.themesFromLogin.isNotEmpty
+        ? jsonEncode(
+            session.themesFromLogin.map((t) => {'id': t.id, 'name': t.name}).toList(),
+          )
+        : null;
+    await _storageService.saveSessionPresentation(
+      profileJson: profileJson,
+      themesFromLoginJson: themesJson,
+    );
+  }
 
   Future<bool> refreshAcessToken() async {
     final refreshToken = await _storageService.getRefreshToken();
@@ -71,8 +119,13 @@ class AuthService {
           accessToken: accessToken,
           refreshToken: refreshToken,
           userId: userId,
+          userEmail: user.email,
         );
-      
+        await _storageService.saveSessionPresentation(
+          profileJson: null,
+          themesFromLoginJson: null,
+        );
+
         return user;
 
       } else {
@@ -96,31 +149,16 @@ class AuthService {
     }
   }
 
-  Future<User> signIn({required String email, required String password}) async {
+  Future<AuthenticatedSession> signIn({required String email, required String password}) async {
     try {
       final response = await _apiClient.post('/auth/login', data: {'email': email, 'password': password});
 
-      if (response.statusCode == 202 && response.data != null) {
-
-        final user = User.fromJson(response.data);
-
-        final accessToken = user.accessToken;
-        final refreshToken = user.refreshToken;
-        final userId = user.id;
-
-        await _storageService.saveAuthData(
-          accessToken: accessToken,
-          refreshToken: refreshToken,
-          userId: userId,
-        );
-      
-        return user;
-
-      } else if (response.statusCode == 200 && response.data != null) {
-        return User.fromJson(response.data);
-      } else {
-        throw Exception('Resposta inesperada da API.');
+      if ((response.statusCode == 200 || response.statusCode == 202) && response.data != null) {
+        final session = _sessionFromAuthEnvelope(response.data as Map<String, dynamic>);
+        await _persistAuthenticatedSession(session);
+        return session;
       }
+      throw Exception('Resposta inesperada da API.');
     } catch (e) {
       if (e is DioException) {
         // Verifica se a exceção é do Dio
@@ -247,14 +285,18 @@ class AuthService {
     }
   }
 
-  Future<User> authGoogle({
+  Future<AuthenticatedSession> authGoogle({
     required String serverAuthCode
   }) async {
 
     try {
       final response = await _apiClient.post('/auth/google', data: {'code': serverAuthCode});
 
-      final userData = response.data;
+      final raw = response.data;
+      if (raw is! Map) {
+        throw Exception('Resposta inválida do login com Google.');
+      }
+      final userData = Map<String, dynamic>.from(raw);
 
       User user = User(
         id: userData['profile']['id'],
@@ -267,9 +309,18 @@ class AuthService {
         accessToken: userData['accessToken'],
         refreshToken: userData['refreshToken'],
         userId: userData['profile']['id'],
+        userEmail: userData['profile']['email'] as String?,
       );
 
-      return user;
+      AuthenticatedSession googleSession;
+      try {
+        googleSession = _sessionFromAuthEnvelope(userData);
+      } catch (_) {
+        googleSession = AuthenticatedSession(user: user);
+      }
+      await _persistAuthenticatedSession(googleSession);
+
+      return googleSession;
 
     } catch (e) {
       if (e is DioException) {

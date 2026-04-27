@@ -14,6 +14,7 @@ class ListeningComprehensionPracticeBody extends StatelessWidget {
     this.showResult = false,
     this.correctOptionIndex,
     this.submittedOptionIndex,
+    this.isInteractionEnabled = true,
   });
 
   final VoidCallback onPlayListening;
@@ -25,6 +26,7 @@ class ListeningComprehensionPracticeBody extends StatelessWidget {
   final bool showResult;
   final int? correctOptionIndex;
   final int? submittedOptionIndex;
+  final bool isInteractionEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +72,9 @@ class ListeningComprehensionPracticeBody extends StatelessWidget {
                   child: Icon(
                     Icons.graphic_eq_rounded,
                     size: 40,
-                    color: isPlayingListening ? AppColors.primaria : AppColors.textoPreto,
+                    color: isPlayingListening
+                        ? AppColors.primaria
+                        : AppColors.textoPreto,
                   ),
                 ),
               ),
@@ -99,11 +103,14 @@ class ListeningComprehensionPracticeBody extends StatelessWidget {
                 color: AppColors.branco,
                 borderRadius: BorderRadius.circular(10),
                 child: InkWell(
-                  onTap: () => onOptionSelected(index),
+                  onTap: isInteractionEnabled
+                      ? () => onOptionSelected(index)
+                      : null,
                   borderRadius: BorderRadius.circular(10),
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 14, horizontal: 14),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
@@ -135,11 +142,14 @@ class ListeningComprehensionPracticeBody extends StatelessWidget {
     required int index,
     required bool selected,
   }) {
-    if (showResult && correctOptionIndex != null && submittedOptionIndex != null) {
+    if (showResult &&
+        correctOptionIndex != null &&
+        submittedOptionIndex != null) {
       if (index == correctOptionIndex) {
         return (color: AppColors.acerto, width: 3);
       }
-      if (index == submittedOptionIndex && submittedOptionIndex != correctOptionIndex) {
+      if (index == submittedOptionIndex &&
+          submittedOptionIndex != correctOptionIndex) {
         return (color: AppColors.erro, width: 3);
       }
       return (color: AppColors.bordaCampo, width: 1);

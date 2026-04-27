@@ -3,9 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/features/auth/views/signin_screen.dart';
 import 'package:plus_vocab/features/configs/views/about_screen.dart';
+import 'package:plus_vocab/features/configs/views/help_screen.dart';
 import 'package:plus_vocab/features/home/views/home_screen.dart';
 import 'package:plus_vocab/features/temas/views/temas_screen.dart';
 import 'package:plus_vocab/features/dicionario/views/dicionario_screen.dart';
+import 'package:plus_vocab/features/configs/views/edit_profile_screen.dart';
 import 'package:provider/provider.dart';
 
 import '../../auth/controllers/auth_controller.dart';
@@ -19,6 +21,18 @@ class ConfigScreen extends StatefulWidget {
 
 class _ConfigScreenState extends State<ConfigScreen> {
   bool _isLoggingOut = false;
+
+  String _capitalizeWords(String value) {
+    return value
+        .split(RegExp(r'\s+'))
+        .where((s) => s.isNotEmpty)
+        .map(
+          (s) =>
+              s.isNotEmpty ? '${s[0].toUpperCase()}${s.substring(1).toLowerCase()}' : '',
+        )
+        .where((s) => s.isNotEmpty)
+        .join(' ');
+  }
 
   String _displayNameFromEmail(String? email) {
     if (email == null || email.isEmpty) return 'Usuário';
@@ -74,7 +88,10 @@ class _ConfigScreenState extends State<ConfigScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
     final email = auth.currentUser?.email ?? '';
-    final displayName = _displayNameFromEmail(email.isEmpty ? null : email);
+    final profileName = auth.userProfile?.name.trim();
+    final displayName = (profileName != null && profileName.isNotEmpty)
+        ? _capitalizeWords(profileName)
+        : _displayNameFromEmail(email.isEmpty ? null : email);
 
     return Scaffold(
       backgroundColor: AppColors.branco,
@@ -138,7 +155,13 @@ class _ConfigScreenState extends State<ConfigScreen> {
                     children: [
                       _MenuRow(
                         title: 'Editar dados de perfil',
-                        onTap: () => _notImplemented('Editar dados de perfil'),
+                        onTap: () {
+                          Navigator.of(context).push<void>(
+                            MaterialPageRoute<void>(
+                              builder: (context) => const EditProfileScreen(),
+                            ),
+                          );
+                        },
                       ),
                       _MenuRow(
                         title: 'Sobre',
@@ -152,7 +175,13 @@ class _ConfigScreenState extends State<ConfigScreen> {
                       ),
                       _MenuRow(
                         title: 'Ajuda',
-                        onTap: () => _notImplemented('Ajuda'),
+                        onTap: () {
+                          Navigator.of(context).push<void>(
+                            MaterialPageRoute<void>(
+                              builder: (context) => const HelpScreen(),
+                            ),
+                          );
+                        },
                       ),
                       _MenuRow(
                         title: 'Sair',

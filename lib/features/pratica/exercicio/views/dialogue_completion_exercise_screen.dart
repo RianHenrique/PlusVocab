@@ -7,6 +7,8 @@ import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/features/pratica/exercicio/layout/exercise_practice_shell.dart';
 import 'package:plus_vocab/features/pratica/exercicio/modalidades/dialogue_completion_practice_body.dart';
 import 'package:plus_vocab/features/pratica/exercicio/models/dialogue_completion_models.dart';
+import 'package:plus_vocab/features/pratica/exercicio/widgets/practice_feedback_content_builder.dart';
+import 'package:plus_vocab/features/pratica/exercicio/widgets/practice_feedback_sheet.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class DialogueCompletionExerciseScreen extends StatefulWidget {
@@ -182,10 +184,10 @@ class _DialogueCompletionExerciseScreenState extends State<DialogueCompletionExe
       _committedTranscript = '-';
       _feedbackCorrect = false;
     });
-    _onSubmit();
+    unawaited(_onSubmit());
   }
 
-  void _onSubmit() {
+  Future<void> _onSubmit() async {
     if (!_canSubmit) return;
 
     final ok = DialogueCompletionEvaluation.matchesTranscript(
@@ -197,15 +199,12 @@ class _DialogueCompletionExerciseScreenState extends State<DialogueCompletionExe
 
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          ok ? 'Resposta aceita!' : 'Tente de novo com outra formulação.',
-          style: GoogleFonts.lexend(color: AppColors.branco),
-        ),
-        backgroundColor: ok ? AppColors.acerto : AppColors.erro,
-      ),
+    final content = PracticeFeedbackContentBuilder.dialogueCompletion(
+      isCorrect: ok,
+      question: widget.question,
+      userTranscript: _committedTranscript,
     );
+    await PracticeFeedbackSheet.show(context, content);
   }
 
   Future<void> _onAbandon() async {
@@ -301,7 +300,7 @@ class _DialogueCompletionExerciseScreenState extends State<DialogueCompletionExe
         onSkip: _onSkip,
       ),
       canSubmit: _canSubmit,
-      onSubmit: _onSubmit,
+      onSubmit: () => unawaited(_onSubmit()),
       onAbandonPractice: _onAbandon,
     );
   }

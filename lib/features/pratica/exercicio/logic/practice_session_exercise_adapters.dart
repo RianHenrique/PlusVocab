@@ -9,6 +9,12 @@ import 'package:plus_vocab/features/pratica/exercicio/models/vocabulary_match_mo
 abstract final class PracticeSessionExerciseAdapters {
   PracticeSessionExerciseAdapters._();
 
+  /// Semente estável por sessão + índice do exercício na lista, para que o embaralhamento
+  /// de alternativas/palavras seja idêntico em toda abertura da mesma partida (incluindo revisão).
+  static int stableShuffleSeed(String practiceSessionId, int exerciseIndex) {
+    return Object.hash(practiceSessionId, exerciseIndex) & 0x7fffffff;
+  }
+
   static String _norm(String s) =>
       s.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '').trim();
 
@@ -16,13 +22,17 @@ abstract final class PracticeSessionExerciseAdapters {
   /// remapeando [answerKey] para manter a correção alinhada ao gabarito original.
   static VocabularyMatchQuestion vocabularyMatchFromItem(
     PracticeExerciseItem item, {
+    required String practiceSessionId,
+    required int exerciseIndex,
     Random? random,
   }) {
-    final rnd = random ?? Random();
+    final rnd =
+        random ?? Random(stableShuffleSeed(practiceSessionId, exerciseIndex));
     final pairs = _wordDefinitionPairs(item.options);
     final words = List<String>.from(item.palavrasChave);
     if (pairs.isEmpty || words.isEmpty) {
-      throw StateError('vocab_match inválido: options ou palavras_chave vazios.');
+      throw StateError(
+          'vocab_match inválido: options ou palavras_chave vazios.');
     }
 
     final definitions = <String>[];
@@ -32,12 +42,14 @@ abstract final class PracticeSessionExerciseAdapters {
       definitions.add(pair.definition);
       final wordIndex = words.indexWhere((w) => _norm(w) == _norm(pair.word));
       if (wordIndex < 0) {
-        throw StateError('Palavra "${pair.word}" não encontrada em palavras_chave.');
+        throw StateError(
+            'Palavra "${pair.word}" não encontrada em palavras_chave.');
       }
       answerKey.add(wordIndex);
     }
 
-    final defPerm = List<int>.generate(definitions.length, (i) => i)..shuffle(rnd);
+    final defPerm = List<int>.generate(definitions.length, (i) => i)
+      ..shuffle(rnd);
     final shuffledDefinitions = defPerm.map((i) => definitions[i]).toList();
     final answerKeyAfterDefs = defPerm.map((i) => answerKey[i]).toList();
 
@@ -48,8 +60,9 @@ abstract final class PracticeSessionExerciseAdapters {
     for (var display = 0; display < wordCount; display++) {
       oldIndexToDisplay[wordPerm[display]] = display;
     }
-    final finalAnswerKey =
-        answerKeyAfterDefs.map((oldWordIdx) => oldIndexToDisplay[oldWordIdx]).toList();
+    final finalAnswerKey = answerKeyAfterDefs
+        .map((oldWordIdx) => oldIndexToDisplay[oldWordIdx])
+        .toList();
 
     return VocabularyMatchQuestion(
       words: shuffledWords,
@@ -61,6 +74,8 @@ abstract final class PracticeSessionExerciseAdapters {
   /// Embaralha a ordem das alternativas na UI e ajusta o índice da resposta correta.
   static ListeningComprehensionQuestion listeningFromItem(
     PracticeExerciseItem item, {
+    required String practiceSessionId,
+    required int exerciseIndex,
     Random? random,
   }) {
     final script = item.text?.trim() ?? '';
@@ -68,8 +83,12 @@ abstract final class PracticeSessionExerciseAdapters {
     final options = _stringList(item.options);
     final gabarito = item.gabarito?.trim() ?? '';
 
-    if (script.isEmpty || questionText.isEmpty || options.length < 2 || gabarito.isEmpty) {
-      throw StateError('listening_comprehension inválido: campos obrigatórios ausentes.');
+    if (script.isEmpty ||
+        questionText.isEmpty ||
+        options.length < 2 ||
+        gabarito.isEmpty) {
+      throw StateError(
+          'listening_comprehension inválido: campos obrigatórios ausentes.');
     }
 
     final correctIndex = options.indexWhere((o) => _norm(o) == _norm(gabarito));
@@ -77,7 +96,8 @@ abstract final class PracticeSessionExerciseAdapters {
       throw StateError('Gabarito não corresponde a nenhuma opção.');
     }
 
-    final rnd = random ?? Random();
+    final rnd =
+        random ?? Random(stableShuffleSeed(practiceSessionId, exerciseIndex));
     final perm = List<int>.generate(options.length, (i) => i)..shuffle(rnd);
     final shuffledOptions = perm.map((i) => options[i]).toList();
     final correctAfterShuffle = perm.indexOf(correctIndex);
@@ -95,7 +115,8 @@ abstract final class PracticeSessionExerciseAdapters {
   /// Espera típico: [questao] = fala em destaque; [options] = lista de textos para TTS (opções
   /// “ocultas”); [gabarito] e/ou [palavras_chave] = respostas aceitas na fala (várias frases
   /// separadas por `|`, `;` ou quebra de linha em [gabarito]).
-  static DialogueCompletionQuestion dialogueCompletionFromItem(PracticeExerciseItem item) {
+  static DialogueCompletionQuestion dialogueCompletionFromItem(
+      PracticeExerciseItem item) {
     var promptLine = item.questao?.trim() ?? '';
     if (promptLine.isEmpty) {
       promptLine = item.text?.trim() ?? '';
@@ -155,7 +176,10 @@ abstract final class PracticeSessionExerciseAdapters {
         final t = e.trim();
         if (t.isNotEmpty) out.add(t);
       } else if (e is Map) {
-        final t = (e['text'] ?? e['audio'] ?? e['line'] ?? e['utterance'])?.toString().trim() ?? '';
+        final t = (e['text'] ?? e['audio'] ?? e['line'] ?? e['utterance'])
+                ?.toString()
+                .trim() ??
+            '';
         if (t.isNotEmpty) out.add(t);
       } else if (e is List && e.isNotEmpty) {
         final t = e.first.toString().trim();

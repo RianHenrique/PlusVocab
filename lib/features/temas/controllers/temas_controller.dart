@@ -15,6 +15,7 @@ class TemasController extends ChangeNotifier {
   bool _isLoadingListaTemas = false;
   String? _errorListaTemas;
   List<TemaResumo>? _temasEmMemoria;
+  bool _jaSincronizouListaNaTelaDeTemas = false;
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -31,6 +32,16 @@ class TemasController extends ChangeNotifier {
     _temasEmMemoria = null;
     _errorListaTemas = null;
     notifyListeners();
+  }
+
+  /// Na primeira entrada na tela de temas, sempre consulta a API (mesmo que o login já tenha trazido uma lista).
+  Future<void> carregarTemasNaPrimeiraAberturaDestaTela() async {
+    if (!_jaSincronizouListaNaTelaDeTemas) {
+      _jaSincronizouListaNaTelaDeTemas = true;
+      await forcarAtualizacaoListaTemas();
+      return;
+    }
+    await carregarListaTemasSeNecessario();
   }
 
   Future<void> carregarListaTemasSeNecessario() async {

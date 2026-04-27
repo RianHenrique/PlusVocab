@@ -21,6 +21,7 @@ class ExercisePracticeShell extends StatelessWidget {
     this.statusLabel = 'Prática em andamento',
     this.submitLabel = 'Enviar',
     this.abandonLabel = 'Abandonar partida?',
+    this.showAbandonAction = true,
     this.leading,
     this.footerBeforeSubmit,
   });
@@ -37,6 +38,7 @@ class ExercisePracticeShell extends StatelessWidget {
   final VoidCallback onAbandonPractice;
   final String submitLabel;
   final String abandonLabel;
+  final bool showAbandonAction;
   final Widget? leading;
   final Widget? footerBeforeSubmit;
 
@@ -122,6 +124,7 @@ class ExercisePracticeShell extends StatelessWidget {
                         submitLabel: submitLabel,
                         abandonLabel: abandonLabel,
                         onAbandon: onAbandonPractice,
+                        showAbandon: showAbandonAction,
                       ),
                     ],
                   ),

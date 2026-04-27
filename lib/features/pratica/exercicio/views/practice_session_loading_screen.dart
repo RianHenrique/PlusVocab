@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/features/pratica/exercicio/data/vocab_practice_service.dart';
 import 'package:plus_vocab/features/pratica/exercicio/views/practice_session_screen.dart';
@@ -103,6 +104,7 @@ class _PracticeSessionLoadingScreenState extends State<PracticeSessionLoadingScr
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
                     'Preparando sua prática',
@@ -124,6 +126,36 @@ class _PracticeSessionLoadingScreenState extends State<PracticeSessionLoadingScr
                     ),
                   ),
                   const SizedBox(height: 24),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 160,
+                          height: 160,
+                          child: Lottie.asset(
+                            'assets/lottie/fox_lottie.json',
+                            fit: BoxFit.contain,
+                            repeat: true,
+                          ),
+                        ),
+                        const SizedBox(height: 28),
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 450),
+                          child: Text(
+                            _phrases[_phraseIndex],
+                            key: ValueKey<int>(_phraseIndex),
+                            textAlign: TextAlign.center,
+                            style: theme.copyWith(
+                              fontSize: 15,
+                              height: 1.45,
+                              color: AppColors.textoPreto,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   Text(
                     'Nossa inteligência artificial está elaborando exercícios personalizados '
                     'com base no seu tema. Isso pode levar alguns instantes — aguarde, por favor.',
@@ -133,34 +165,6 @@ class _PracticeSessionLoadingScreenState extends State<PracticeSessionLoadingScr
                       height: 1.5,
                       color: AppColors.textoSecundario,
                       fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  const SizedBox(
-                    width: 96,
-                    height: 96,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 6,
-                      color: AppColors.primaria,
-                      backgroundColor: AppColors.bordaCampo,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  Expanded(
-                    child: Center(
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 450),
-                        child: Text(
-                          _phrases[_phraseIndex],
-                          key: ValueKey<int>(_phraseIndex),
-                          textAlign: TextAlign.center,
-                          style: theme.copyWith(
-                            fontSize: 15,
-                            height: 1.45,
-                            color: AppColors.textoPreto,
-                          ),
-                        ),
-                      ),
                     ),
                   ),
                 ],

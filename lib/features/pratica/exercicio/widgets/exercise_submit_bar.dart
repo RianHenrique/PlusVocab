@@ -10,6 +10,7 @@ class ExerciseSubmitBar extends StatelessWidget {
     required this.onAbandon,
     this.submitLabel = 'Enviar',
     this.abandonLabel = 'Abandonar partida?',
+    this.showAbandon = true,
   });
 
   final bool canSubmit;
@@ -17,6 +18,7 @@ class ExerciseSubmitBar extends StatelessWidget {
   final VoidCallback onAbandon;
   final String submitLabel;
   final String abandonLabel;
+  final bool showAbandon;
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +32,8 @@ class ExerciseSubmitBar extends StatelessWidget {
             onPressed: canSubmit ? onSubmit : null,
             style: ElevatedButton.styleFrom(
               elevation: 0,
-              backgroundColor: canSubmit ? AppColors.primaria : AppColors.bordaCampo,
+              backgroundColor:
+                  canSubmit ? AppColors.primaria : AppColors.bordaCampo,
               foregroundColor: AppColors.branco,
               disabledBackgroundColor: AppColors.bordaCampo,
               disabledForegroundColor: AppColors.branco,
@@ -47,20 +50,22 @@ class ExerciseSubmitBar extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 12),
-        Center(
-          child: TextButton(
-            onPressed: onAbandon,
-            child: Text(
-              abandonLabel,
-              style: GoogleFonts.lexend(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: AppColors.erro,
+        if (showAbandon) ...[
+          const SizedBox(height: 12),
+          Center(
+            child: TextButton(
+              onPressed: onAbandon,
+              child: Text(
+                abandonLabel,
+                style: GoogleFonts.lexend(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.erro,
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ],
     );
   }

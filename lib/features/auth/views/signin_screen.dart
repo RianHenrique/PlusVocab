@@ -9,6 +9,7 @@ import '../controllers/auth_controller.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/features/auth/views/signup_screen.dart';
 import 'package:plus_vocab/features/auth/views/recovery_pass_email_screen.dart';
+import 'package:plus_vocab/features/auth/views/onboarding_screen.dart';
 import 'package:plus_vocab/features/home/views/home_screen.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -50,10 +51,11 @@ class _SignInScreenState extends State<SignInScreen> {
       if (!mounted) return;
 
       if (authController.errorMessage == null) {
+        final destino = authController.needsProfileOnboarding
+            ? const OnboardingScreen()
+            : const HomeScreen();
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const HomeScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => destino),
         );
       }
     }
@@ -67,10 +69,11 @@ class _SignInScreenState extends State<SignInScreen> {
     if (!mounted) return;
 
     if (authController.errorMessage == null && authController.currentUser != null) {
+      final destino = authController.needsProfileOnboarding
+          ? const OnboardingScreen()
+          : const HomeScreen();
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => destino),
       );
     } else if (authController.errorMessage != null) {
       // Deu erro (ex: 401 do backend), mostra o erro

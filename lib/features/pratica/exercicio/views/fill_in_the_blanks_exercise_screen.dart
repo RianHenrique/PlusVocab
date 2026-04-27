@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/features/pratica/exercicio/layout/exercise_practice_shell.dart';
 import 'package:plus_vocab/features/pratica/exercicio/modalidades/fill_in_the_blanks_practice_body.dart';
 import 'package:plus_vocab/features/pratica/exercicio/models/fill_in_the_blanks_models.dart';
+import 'package:plus_vocab/features/pratica/exercicio/widgets/practice_feedback_content_builder.dart';
+import 'package:plus_vocab/features/pratica/exercicio/widgets/practice_feedback_sheet.dart';
 
 class FillInTheBlanksExerciseScreen extends StatefulWidget {
   const FillInTheBlanksExerciseScreen({
@@ -60,7 +64,7 @@ class _FillInTheBlanksExerciseScreenState extends State<FillInTheBlanksExerciseS
     });
   }
 
-  void _onSubmit() {
+  Future<void> _onSubmit() async {
     if (!_canSubmit) return;
 
     final ok = FillInTheBlanksEvaluation.matchesAnswer(
@@ -72,15 +76,12 @@ class _FillInTheBlanksExerciseScreenState extends State<FillInTheBlanksExerciseS
 
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          ok ? 'Resposta correta!' : 'Resposta incorreta.',
-          style: GoogleFonts.lexend(color: AppColors.branco),
-        ),
-        backgroundColor: ok ? AppColors.acerto : AppColors.erro,
-      ),
+    final content = PracticeFeedbackContentBuilder.fillBlanks(
+      isCorrect: ok,
+      question: widget.question,
+      userAnswer: _answerController.text,
     );
+    await PracticeFeedbackSheet.show(context, content);
   }
 
   Future<void> _onAbandon() async {
@@ -166,7 +167,7 @@ class _FillInTheBlanksExerciseScreenState extends State<FillInTheBlanksExerciseS
         fieldBorderColor: _fieldBorderColor,
       ),
       canSubmit: _canSubmit,
-      onSubmit: _onSubmit,
+      onSubmit: () => unawaited(_onSubmit()),
       onAbandonPractice: _onAbandon,
     );
   }

@@ -15,6 +15,7 @@ class PalavraWord {
 class PalavraModel {
   const PalavraModel({
     required this.id,
+    required this.active,
     required this.boxLevel,
     required this.correctCount,
     required this.incorrectCount,
@@ -23,6 +24,7 @@ class PalavraModel {
   });
 
   final String id;
+  final bool active;
   final int boxLevel;
   final int correctCount;
   final int incorrectCount;
@@ -31,6 +33,7 @@ class PalavraModel {
 
   factory PalavraModel.fromJson(Map<String, dynamic> json) => PalavraModel(
         id: json['id'] as String,
+        active: json['active'] as bool? ?? true,
         boxLevel: (json['boxLevel'] as num).toInt(),
         correctCount: (json['correctCount'] as num? ?? 0).toInt(),
         incorrectCount: (json['incorrectCount'] as num? ?? 0).toInt(),

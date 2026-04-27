@@ -14,6 +14,7 @@ class DialogueCompletionPracticeBody extends StatelessWidget {
     required this.onMicPointerUpOrCancel,
     this.transcriptFeedbackCorrect,
     this.onSkip,
+    this.microphoneEnabled = true,
   });
 
   final String promptLine;
@@ -24,6 +25,7 @@ class DialogueCompletionPracticeBody extends StatelessWidget {
   final VoidCallback onMicPointerDown;
   final VoidCallback onMicPointerUpOrCancel;
   final bool? transcriptFeedbackCorrect;
+  final bool microphoneEnabled;
 
   /// Se não for nulo, exibe o botão "Pular" ao final (preenche resposta inválida e segue o fluxo de envio).
   final VoidCallback? onSkip;
@@ -49,57 +51,69 @@ class DialogueCompletionPracticeBody extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
-          ...List.generate(lineCount, (index) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Material(
-                color: AppColors.branco,
-                borderRadius: BorderRadius.circular(10),
-                child: InkWell(
-                  onTap: () => onPlayLine(index),
-                  borderRadius: BorderRadius.circular(10),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                    decoration: BoxDecoration(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: List.generate(lineCount, (index) {
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: index == 0 ? 0 : 6,
+                    right: index == lineCount - 1 ? 0 : 6,
+                  ),
+                  child: Material(
+                    color: AppColors.branco,
+                    borderRadius: BorderRadius.circular(10),
+                    child: InkWell(
+                      onTap: () => onPlayLine(index),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.bordaCampo),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.volume_up_rounded, color: AppColors.primaria, size: 26),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              final style = GoogleFonts.lexend(
-                                fontSize: 13,
-                                letterSpacing: 0.5,
-                                color: AppColors.textoSuave,
-                              );
-                              const dot = '·';
-                              final painter = TextPainter(
-                                text: TextSpan(text: dot, style: style),
-                                textDirection: TextDirection.ltr,
-                              )..layout();
-                              final w = painter.width;
-                              final count = w > 0 ? (constraints.maxWidth / w).floor() : 80;
-                              final safeCount = count.clamp(40, 400);
-                              return Text(
-                                List.filled(safeCount, dot).join(),
-                                maxLines: 1,
-                                overflow: TextOverflow.clip,
-                                style: style,
-                              );
-                            },
-                          ),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 10),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppColors.bordaCampo),
                         ),
-                      ],
+                        child: Row(
+                          children: [
+                            const Icon(Icons.volume_up_rounded,
+                                color: AppColors.primaria, size: 24),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final style = GoogleFonts.lexend(
+                                    fontSize: 13,
+                                    letterSpacing: 0.5,
+                                    color: AppColors.textoSuave,
+                                  );
+                                  const dot = '·';
+                                  final painter = TextPainter(
+                                    text: TextSpan(text: dot, style: style),
+                                    textDirection: TextDirection.ltr,
+                                  )..layout();
+                                  final w = painter.width;
+                                  final count = w > 0
+                                      ? (constraints.maxWidth / w).floor()
+                                      : 12;
+                                  final safeCount = count.clamp(8, 200);
+                                  return Text(
+                                    List.filled(safeCount, dot).join(),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.clip,
+                                    style: style,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          }),
+              );
+            }),
+          ),
           const SizedBox(height: 16),
           Text(
             'Segure para gravar',
@@ -113,9 +127,12 @@ class DialogueCompletionPracticeBody extends StatelessWidget {
           Center(
             child: Listener(
               behavior: HitTestBehavior.opaque,
-              onPointerDown: (_) => onMicPointerDown(),
-              onPointerUp: (_) => onMicPointerUpOrCancel(),
-              onPointerCancel: (_) => onMicPointerUpOrCancel(),
+              onPointerDown:
+                  microphoneEnabled ? (_) => onMicPointerDown() : null,
+              onPointerUp:
+                  microphoneEnabled ? (_) => onMicPointerUpOrCancel() : null,
+              onPointerCancel:
+                  microphoneEnabled ? (_) => onMicPointerUpOrCancel() : null,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 120),
                 width: 78,
@@ -129,7 +146,8 @@ class DialogueCompletionPracticeBody extends StatelessWidget {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.sombraElevacao.withValues(alpha: isListening ? 0.22 : 0.15),
+                      color: AppColors.sombraElevacao
+                          .withValues(alpha: isListening ? 0.22 : 0.15),
                       blurRadius: isListening ? 12 : 8,
                       offset: const Offset(0, 4),
                     ),
@@ -174,18 +192,21 @@ class DialogueCompletionPracticeBody extends StatelessWidget {
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
                 height: 1.28,
-                color: userTranscript.isEmpty ? AppColors.textoHint : AppColors.textoPreto,
+                color: userTranscript.isEmpty
+                    ? AppColors.textoHint
+                    : AppColors.textoPreto,
               ),
             ),
           ),
           if (onSkip != null) ...[
-            const SizedBox(height: 28),
+            const SizedBox(height: 20),
             Center(
               child: TextButton(
                 onPressed: onSkip,
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.textoSecundario,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 ),
                 child: Text(
                   'Pular',

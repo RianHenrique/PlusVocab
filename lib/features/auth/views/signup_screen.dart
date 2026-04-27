@@ -6,7 +6,9 @@ import 'package:provider/provider.dart';
 
 import '../controllers/auth_controller.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
+import 'package:plus_vocab/features/auth/views/onboarding_screen.dart';
 import 'package:plus_vocab/features/auth/views/signin_screen.dart';
+import 'package:plus_vocab/features/home/views/home_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -50,12 +52,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
       if (!mounted) return;
 
       if (authController.errorMessage == null) {
+        final destino = authController.needsProfileOnboarding
+            ? const OnboardingScreen()
+            : const HomeScreen();
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            // TODO: Troque pelo seu Widget de Home
-            builder: (context) =>
-                const Placeholder(child: Center(child: Text('Home Screen'))),
-          ),
+          MaterialPageRoute(builder: (context) => destino),
         );
       }
     }

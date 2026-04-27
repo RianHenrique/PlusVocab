@@ -47,4 +47,16 @@ class TemaResumo {
       updatedAt: json['updatedAt'] as String? ?? '',
     );
   }
+
+  /// Resposta enxuta do login (`id` + `name` apenas).
+  factory TemaResumo.fromLoginSummary(Map<String, dynamic> json) {
+    return TemaResumo(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      description: '',
+      modalities: const [],
+      createdAt: '',
+      updatedAt: '',
+    );
+  }
 }

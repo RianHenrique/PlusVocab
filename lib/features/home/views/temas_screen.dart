@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
+import 'package:plus_vocab/features/auth/controllers/auth_controller.dart';
+import 'package:plus_vocab/features/pratica/exercicio/views/practice_session_loading_screen.dart';
+import 'package:plus_vocab/features/temas/models/tema_resumo.dart';
+import 'package:provider/provider.dart';
 
 class TemasHomeTab extends StatefulWidget {
   const TemasHomeTab({super.key});
@@ -11,33 +15,18 @@ class TemasHomeTab extends StatefulWidget {
 
 class _TemasHomeTabState extends State<TemasHomeTab> {
   final TextEditingController _searchController = TextEditingController();
-
-  static const List<Map<String, dynamic>> allThemes = [
-    {'tema': 'Ida a um restaurante', 'matches': 5, 'successRate': 75},
-    {'tema': 'Conversa em um bar', 'matches': 4, 'successRate': 100},
-    {'tema': 'Compras no shopping', 'matches': 2, 'successRate': 90},
-    {
-      'tema': 'Entrevista de emprego na Amazon',
-      'matches': 7,
-      'successRate': 50
-    },
-  ];
-
-  List<Map<String, dynamic>> filteredThemes = [];
+  String _searchQuery = '';
 
   @override
-  void initState() {
-    super.initState();
-    filteredThemes = List.from(allThemes);
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
-  void _filterThemes(String query) {
-    setState(() {
-      filteredThemes = allThemes
-          .where((theme) =>
-              theme['tema'].toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    });
+  List<TemaResumo> _filtrar(List<TemaResumo> temas) {
+    if (_searchQuery.isEmpty) return temas;
+    final q = _searchQuery.toLowerCase();
+    return temas.where((t) => t.name.toLowerCase().contains(q)).toList();
   }
 
   Widget _buildSearchField() {
@@ -59,7 +48,7 @@ class _TemasHomeTabState extends State<TemasHomeTab> {
       ),
       child: TextField(
         controller: _searchController,
-        onChanged: _filterThemes,
+        onChanged: (v) => setState(() => _searchQuery = v),
         textAlignVertical: TextAlignVertical.center,
         maxLines: null,
         style: GoogleFonts.lexend(
@@ -71,7 +60,7 @@ class _TemasHomeTabState extends State<TemasHomeTab> {
           hintStyle: GoogleFonts.lexend(
             fontSize: 14,
             color: AppColors.textoSecundario
-          ), // Usando Lexend
+          ),
           border: InputBorder.none,
           suffixIcon: const Icon(Icons.search, color: AppColors.primaria),
         ),
@@ -90,7 +79,7 @@ class _TemasHomeTabState extends State<TemasHomeTab> {
     );
   }
 
-  Widget _buildThemeCard(String title, int matches, int successRate) {
+  Widget _buildThemeCard(BuildContext context, TemaResumo tema) {
     return Column(
       children: [
         Container(
@@ -111,7 +100,7 @@ class _TemasHomeTabState extends State<TemasHomeTab> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                title,
+                tema.name,
                 style: GoogleFonts.lexend(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -120,7 +109,7 @@ class _TemasHomeTabState extends State<TemasHomeTab> {
               ),
               const SizedBox(height: 5),
               Text(
-                'Número de partidas: $matches | Taxa de acerto: $successRate%',
+                'Resumo carregado após abrir a tela de temas.',
                 style: GoogleFonts.lexend(
                   color: AppColors.textoSecundario,
                   fontSize: 12,
@@ -135,7 +124,14 @@ class _TemasHomeTabState extends State<TemasHomeTab> {
                   const SizedBox(width: 10),
                   ElevatedButton(
                     onPressed: () {
-                      // Lógica para iniciar o jogo com esse tema
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => PracticeSessionLoadingScreen(
+                            themeId: tema.id,
+                            practiceTitle: tema.name,
+                          ),
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaria,
@@ -159,11 +155,23 @@ class _TemasHomeTabState extends State<TemasHomeTab> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(children: [
-      _buildSearchField(),
-      const SizedBox(height: 20),
-      filteredThemes.isEmpty
-          ? Center(
+    return Consumer<AuthController>(
+      builder: (context, auth, _) {
+        final filtrados = _filtrar(auth.themesFromLogin);
+        return Column(children: [
+          _buildSearchField(),
+          const SizedBox(height: 20),
+          if (auth.themesFromLogin.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'Os temas da sua conta aparecem aqui após o login.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.lexend(fontSize: 14, color: AppColors.textoSecundario),
+              ),
+            )
+          else if (filtrados.isEmpty)
+            Center(
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
@@ -172,16 +180,17 @@ class _TemasHomeTabState extends State<TemasHomeTab> {
                 ),
               ),
             )
-          : ListView.builder(
+          else
+            ListView.builder(
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
-              itemCount: filteredThemes.length,
+              itemCount: filtrados.length,
               itemBuilder: (context, index) {
-                final themeInfo = filteredThemes[index];
-                return _buildThemeCard(themeInfo['tema'], themeInfo['matches'],
-                    themeInfo['successRate']);
+                return _buildThemeCard(context, filtrados[index]);
               },
             ),
-    ]);
+        ]);
+      },
+    );
   }
 }

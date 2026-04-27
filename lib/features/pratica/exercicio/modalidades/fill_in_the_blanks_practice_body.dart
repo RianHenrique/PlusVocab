@@ -11,6 +11,7 @@ class FillInTheBlanksPracticeBody extends StatelessWidget {
     required this.placeholder,
     required this.onAnswerChanged,
     required this.fieldBorderColor,
+    this.readOnly = false,
   });
 
   final String textBeforeBlank;
@@ -19,6 +20,7 @@ class FillInTheBlanksPracticeBody extends StatelessWidget {
   final String placeholder;
   final VoidCallback onAnswerChanged;
   final Color fieldBorderColor;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +48,8 @@ class FillInTheBlanksPracticeBody extends StatelessWidget {
                   ),
                 ),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 24),
+                  constraints:
+                      const BoxConstraints(minWidth: 32, minHeight: 24),
                   child: const SizedBox.shrink(),
                 ),
               ),
@@ -56,7 +59,8 @@ class FillInTheBlanksPracticeBody extends StatelessWidget {
           const SizedBox(height: 18),
           TextField(
             controller: answerController,
-            onChanged: (_) => onAnswerChanged(),
+            readOnly: readOnly,
+            onChanged: readOnly ? null : (_) => onAnswerChanged(),
             textCapitalization: TextCapitalization.sentences,
             style: GoogleFonts.lexend(
               fontSize: 16,
@@ -70,7 +74,8 @@ class FillInTheBlanksPracticeBody extends StatelessWidget {
               ),
               filled: true,
               fillColor: AppColors.branco,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide(color: fieldBorderColor, width: 1),

@@ -27,7 +27,7 @@ class _TemasScreenState extends State<TemasScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<TemasController>().carregarListaTemasSeNecessario();
+      context.read<TemasController>().carregarTemasNaPrimeiraAberturaDestaTela();
     });
   }
 
@@ -314,17 +314,28 @@ class _TemasScreenState extends State<TemasScreen> {
           border: Border.all(color: AppColors.bordaCampo),
           boxShadow: [BoxShadow(color: AppColors.sombraLeve, blurRadius: 4, offset: const Offset(0, 2))],
         ),
-        child: TextField(
-          controller: _searchController,
-          onChanged: (v) => setState(() => _searchQuery = v),
-          style: GoogleFonts.lexend(fontSize: 13, color: AppColors.textoPreto),
-          decoration: InputDecoration(
-            hintText: 'Buscar tema...',
-            hintStyle: GoogleFonts.lexend(fontSize: 13, color: AppColors.textoSecundario),
-            prefixIcon: Icon(Icons.search, size: 18, color: AppColors.textoSecundario),
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(vertical: 11),
-          ),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(Icons.search, size: 20, color: AppColors.textoSecundario),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                onChanged: (v) => setState(() => _searchQuery = v),
+                textAlignVertical: TextAlignVertical.center,
+                style: GoogleFonts.lexend(fontSize: 13, color: AppColors.textoPreto),
+                decoration: InputDecoration(
+                  isDense: true,
+                  hintText: 'Buscar tema...',
+                  hintStyle: GoogleFonts.lexend(fontSize: 13, color: AppColors.textoSecundario),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

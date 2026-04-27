@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/features/pratica/exercicio/layout/exercise_practice_shell.dart';
 import 'package:plus_vocab/features/pratica/exercicio/modalidades/vocabulary_match_practice_body.dart';
 import 'package:plus_vocab/features/pratica/exercicio/models/vocabulary_match_models.dart';
+import 'package:plus_vocab/features/pratica/exercicio/widgets/practice_feedback_content_builder.dart';
+import 'package:plus_vocab/features/pratica/exercicio/widgets/practice_feedback_sheet.dart';
 
 class VocabularyMatchExerciseScreen extends StatefulWidget {
   const VocabularyMatchExerciseScreen({
@@ -68,7 +72,7 @@ class _VocabularyMatchExerciseScreenState extends State<VocabularyMatchExerciseS
     });
   }
 
-  void _onSubmit() {
+  Future<void> _onSubmit() async {
     if (!_allFilled) return;
 
     final result = VocabularyMatchEvaluation.evaluate(
@@ -80,15 +84,10 @@ class _VocabularyMatchExerciseScreenState extends State<VocabularyMatchExerciseS
 
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          result.isFullyCorrect ? 'Tudo certo!' : 'Revise as associações incorretas.',
-          style: GoogleFonts.lexend(color: AppColors.branco),
-        ),
-        backgroundColor: result.isFullyCorrect ? AppColors.acerto : AppColors.erro,
-      ),
+    final content = PracticeFeedbackContentBuilder.vocabularyMatch(
+      isCorrect: result.isFullyCorrect,
     );
+    await PracticeFeedbackSheet.show(context, content);
   }
 
   Future<void> _onAbandon() async {
@@ -175,7 +174,7 @@ class _VocabularyMatchExerciseScreenState extends State<VocabularyMatchExerciseS
         feedback: _feedback,
       ),
       canSubmit: _allFilled,
-      onSubmit: _onSubmit,
+      onSubmit: () => unawaited(_onSubmit()),
       onAbandonPractice: _onAbandon,
     );
   }
