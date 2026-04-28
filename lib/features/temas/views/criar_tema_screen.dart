@@ -49,12 +49,22 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
     "listening": "Listening Comprehension",
   };
 
+  static const int _limiteTitulo = 30;
+  static const int _limiteDescricao = 240;
+
+  static String _textoAte(String s, int max) {
+    if (s.length <= max) return s;
+    return s.substring(0, max);
+  }
+
   @override
   void initState() {
     super.initState();
     final tema = widget.temaParaEditar;
-    _tituloController = TextEditingController(text: tema?.name ?? '');
-    _contextoController = TextEditingController(text: tema?.description ?? widget.contexto);
+    _tituloController = TextEditingController(text: _textoAte(tema?.name ?? '', _limiteTitulo));
+    _contextoController = TextEditingController(
+      text: _textoAte(tema?.description ?? widget.contexto, _limiteDescricao),
+    );
     _selecionados = tema != null
         ? tema.modalities
             .map((m) => _modalidadeMapInverso[m.name] ?? m.name)
@@ -71,19 +81,29 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
   }
 
   bool _validarCampos() {
-    if (_tituloController.text.trim().isEmpty) {
+    final titulo = _tituloController.text.trim();
+    if (titulo.isEmpty) {
       _mostrarErro('Informe o título do tema.');
       return false;
     }
-    if (_contextoController.text.trim().isEmpty) {
+    if (titulo.length > _limiteTitulo) {
+      _mostrarErro('O título pode ter no máximo $_limiteTitulo caracteres.');
+      return false;
+    }
+    final descricao = _contextoController.text.trim();
+    if (descricao.isEmpty) {
       _mostrarErro('Informe o contexto da prática.');
+      return false;
+    }
+    if (descricao.length > _limiteDescricao) {
+      _mostrarErro('A descrição pode ter no máximo $_limiteDescricao caracteres.');
       return false;
     }
     if (_selecionados.isEmpty) {
       _mostrarErro('Selecione ao menos uma modalidade.');
       return false;
     }
-    return true;
+  return true;
   }
 
   void _mostrarErro(String mensagem) {
@@ -229,11 +249,11 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
                             children: [
                               Text("Título", style: GoogleFonts.lexend(fontSize: 12, color: AppColors.textoPreto)),
                               const SizedBox(height: 8),
-                              _buildCampo(controller: _tituloController),
+                              _buildCampo(controller: _tituloController, maxLength: _limiteTitulo),
                               const SizedBox(height: 16),
                               Text("Contexto da prática", style: GoogleFonts.lexend(fontSize: 12, color: AppColors.textoPreto)),
                               const SizedBox(height: 8),
-                              _buildCampo(controller: _contextoController, maxLines: 3),
+                              _buildCampo(controller: _contextoController, maxLines: 3, maxLength: _limiteDescricao),
                               const SizedBox(height: 28),
                               Text("Modalidades da prática", style: GoogleFonts.lexend(fontSize: 12, color: AppColors.textoPreto)),
                               const SizedBox(height: 8),
@@ -322,7 +342,7 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
     );
   }
 
-  Widget _buildCampo({required TextEditingController controller, int maxLines = 1}) {
+  Widget _buildCampo({required TextEditingController controller, int maxLines = 1, int? maxLength}) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.fundoClaro,
@@ -333,6 +353,7 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
       child: TextFormField(
         controller: controller,
         maxLines: maxLines,
+        maxLength: maxLength,
         style: GoogleFonts.lexend(fontSize: 14, color: AppColors.textoPreto),
         decoration: const InputDecoration(
           border: OutlineInputBorder(

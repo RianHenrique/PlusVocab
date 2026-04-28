@@ -9,6 +9,10 @@ import 'package:plus_vocab/features/dicionario/views/dicionario_screen.dart';
 import 'package:plus_vocab/features/home/components/calendario_horizontal.dart';
 import 'package:plus_vocab/features/home/controllers/progress_home_controller.dart';
 import 'package:plus_vocab/features/home/models/progress_home.dart';
+import 'package:plus_vocab/features/progress/controllers/progress_screen_controller.dart';
+import 'package:plus_vocab/features/progress/data/progress_service.dart';
+import 'package:plus_vocab/features/progress/views/my_progress_screen.dart';
+import 'package:plus_vocab/features/progress/views/ranking_week_screen.dart';
 import 'package:plus_vocab/features/pratica/exercicio/views/practice_session_loading_screen.dart';
 import 'package:plus_vocab/features/temas/controllers/temas_controller.dart';
 import 'package:plus_vocab/features/temas/models/tema_resumo.dart';
@@ -90,7 +94,32 @@ class _HomeScreenState extends State<HomeScreen> {
                           'assets/images/PlusVocab2.png',
                           height: 35,
                         ),
-                        const ProfileCircle(),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Tooltip(
+                              message: 'Ranking da semana',
+                              child: IconButton(
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) => const RankingWeekScreen(),
+                                    ),
+                                  );
+                                },
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                                style: IconButton.styleFrom(
+                                  foregroundColor: AppColors.primaria,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                icon: const Icon(Icons.emoji_events_outlined, size: 28),
+                              ),
+                            ),
+                            const SizedBox(width: 2),
+                            const ProfileCircle(),
+                          ],
+                        ),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -173,7 +202,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 28),
                     Consumer<ProgressHomeController>(
                       builder: (context, progressCtrl, _) {
-                        return _LearningSummaryCard(controller: progressCtrl);
+                        return _LearningSummaryCard(
+                          controller: progressCtrl,
+                          onVerProgresso: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (c) => ChangeNotifierProvider(
+                                  create: (_) =>
+                                      ProgressScreenController(c.read<ProgressService>())..loadInitial(),
+                                  child: const MyProgressScreen(),
+                                ),
+                              ),
+                            );
+                          },
+                        );
                       },
                     ),
                     const SizedBox(height: 28),
@@ -262,9 +304,13 @@ class _SectionHeader extends StatelessWidget {
 const Color _summaryLabelBlue = Color(0xFF3B82F6);
 
 class _LearningSummaryCard extends StatelessWidget {
-  const _LearningSummaryCard({required this.controller});
+  const _LearningSummaryCard({
+    required this.controller,
+    this.onVerProgresso,
+  });
 
   final ProgressHomeController controller;
+  final VoidCallback? onVerProgresso;
 
   @override
   Widget build(BuildContext context) {
@@ -275,7 +321,7 @@ class _LearningSummaryCard extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _SummaryHeaderRow(),
+          _SummaryHeaderRow(onVerProgresso: onVerProgresso),
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.all(20),
@@ -308,7 +354,7 @@ class _LearningSummaryCard extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const _SummaryHeaderRow(),
+            _SummaryHeaderRow(onVerProgresso: onVerProgresso),
             const SizedBox(height: 10),
             Container(
               height: 120,
@@ -333,7 +379,7 @@ class _LearningSummaryCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _SummaryHeaderRow(),
+        _SummaryHeaderRow(onVerProgresso: onVerProgresso),
         const SizedBox(height: 10),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
@@ -357,7 +403,9 @@ class _LearningSummaryCard extends StatelessWidget {
 }
 
 class _SummaryHeaderRow extends StatelessWidget {
-  const _SummaryHeaderRow();
+  const _SummaryHeaderRow({this.onVerProgresso});
+
+  final VoidCallback? onVerProgresso;
 
   @override
   Widget build(BuildContext context) {
@@ -376,16 +424,17 @@ class _SummaryHeaderRow extends StatelessWidget {
           ),
         ),
         TextButton(
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Tela de progresso completo em breve.',
-                  style: GoogleFonts.lexend(),
-                ),
-              ),
-            );
-          },
+          onPressed: onVerProgresso ??
+              () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Tela de progresso completo em breve.',
+                      style: GoogleFonts.lexend(),
+                    ),
+                  ),
+                );
+              },
           style: TextButton.styleFrom(
             padding: const EdgeInsets.only(left: 8, bottom: 0),
             minimumSize: Size.zero,
@@ -395,45 +444,12 @@ class _SummaryHeaderRow extends StatelessWidget {
           child: Text(
             'Visualizar progresso',
             style: GoogleFonts.lexend(
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
               color: AppColors.primaria,
               height: 1.2,
             ),
           ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Valor + rótulo na mesma linha quando couber; quebra com ambos centralizados se estreito.
-class _SummaryMetricWrap extends StatelessWidget {
-  const _SummaryMetricWrap({
-    required this.valueText,
-    required this.labelText,
-    required this.valueStyle,
-    required this.labelStyle,
-  });
-
-  final String valueText;
-  final String labelText;
-  final TextStyle valueStyle;
-  final TextStyle labelStyle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      alignment: WrapAlignment.center,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: 8,
-      runSpacing: 4,
-      children: [
-        Text(valueText, style: valueStyle),
-        Text(
-          labelText,
-          textAlign: TextAlign.center,
-          style: labelStyle,
         ),
       ],
     );
@@ -602,52 +618,51 @@ class _SummaryPopulated extends StatelessWidget {
           Expanded(
             flex: 12,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _SummaryMetricWrap(
-                  valueText: '$pct%',
-                  labelText: 'acerto médio',
-                  valueStyle: GoogleFonts.lexend(
+                Text(
+                  '$pct%',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.lexend(
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
                     color: AppColors.primaria,
+                    height: 1,
                   ),
-                  labelStyle: GoogleFonts.lexend(
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'acerto médio',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.lexend(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                     color: _summaryLabelBlue,
                     height: 1.2,
                   ),
                 ),
-                const SizedBox(height: 18),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      '${data.wordsSeen}',
-                      style: GoogleFonts.lexend(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.primaria,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'palavras vistas',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.lexend(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: _summaryLabelBlue,
-                          height: 1.2,
-                        ),
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 16),
+                Text(
+                  '${data.wordsSeen}',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.lexend(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primaria,
+                    height: 1,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'palavras praticadas',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.lexend(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: _summaryLabelBlue,
+                    height: 1.2,
+                  ),
                 ),
               ],
             ),
@@ -661,34 +676,25 @@ class _SummaryPopulated extends StatelessWidget {
 class _FeaturedTemasStrip extends StatelessWidget {
   const _FeaturedTemasStrip();
 
-  static const _badges = ['nível ouro', 'nível prata', 'nível bronze'];
-
   bool _isNovo(TemaResumo t) {
     if (t.createdAt.isEmpty) return false;
     try {
       final c = DateTime.parse(t.createdAt).toLocal();
-      return DateTime.now().difference(c).inDays <= 7;
+      return DateTime.now().difference(c).inDays < 3;
     } catch (_) {
       return false;
     }
   }
 
-  ({Color bg, Color fg, String text}) _badgeFor(TemaResumo t, int index) {
-    if (_isNovo(t)) {
-      return (
-        bg: const Color(0xFFDBEAFE),
-        fg: AppColors.primaria,
-        text: 'novo',
-      );
+  ({Color bg, Color fg, String text})? _badgeFor(TemaResumo t) {
+    if (!_isNovo(t)) {
+      return null;
     }
-    final label = _badges[index % _badges.length];
-    if (label == 'nível ouro') {
-      return (bg: const Color(0xFFFFF4CC), fg: const Color(0xFFB45309), text: label);
-    }
-    if (label == 'nível prata') {
-      return (bg: const Color(0xFFE8E8E8), fg: const Color(0xFF4B5563), text: label);
-    }
-    return (bg: const Color(0xFFFFE4CC), fg: const Color(0xFF9A3412), text: label);
+    return (
+      bg: const Color(0xFFDBEAFE),
+      fg: AppColors.primaria,
+      text: 'novo',
+    );
   }
 
   List<TemaResumo> _ordered(List<TemaResumo> list) {
@@ -712,7 +718,7 @@ class _FeaturedTemasStrip extends StatelessWidget {
       builder: (context, temasCtrl, auth, _) {
         if (temasCtrl.isLoadingListaTemas && !temasCtrl.temasListaJaCarregada) {
           return SizedBox(
-            height: 148,
+            height: 128,
             child: Center(
               child: Text(
                 'Carregando temas…',
@@ -737,19 +743,17 @@ class _FeaturedTemasStrip extends StatelessWidget {
         final featured = _ordered(temas);
 
         return SizedBox(
-          height: 140,
+          height: 120,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: featured.length,
             separatorBuilder: (_, __) => const SizedBox(width: 10),
             itemBuilder: (context, index) {
               final tema = featured[index];
-              final badge = _badgeFor(tema, index);
+              final badge = _badgeFor(tema);
               return _FeaturedTemaCard(
                 tema: tema,
-                badgeBackground: badge.bg,
-                badgeForeground: badge.fg,
-                badgeText: badge.text,
+                badge: badge,
               );
             },
           ),
@@ -762,15 +766,11 @@ class _FeaturedTemasStrip extends StatelessWidget {
 class _FeaturedTemaCard extends StatelessWidget {
   const _FeaturedTemaCard({
     required this.tema,
-    required this.badgeBackground,
-    required this.badgeForeground,
-    required this.badgeText,
+    this.badge,
   });
 
   final TemaResumo tema;
-  final Color badgeBackground;
-  final Color badgeForeground;
-  final String badgeText;
+  final ({Color bg, Color fg, String text})? badge;
 
   @override
   Widget build(BuildContext context) {
@@ -797,21 +797,23 @@ class _FeaturedTemaCard extends StatelessWidget {
             children: [
               Align(
                 alignment: Alignment.centerLeft,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: badgeBackground,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    badgeText,
-                    style: GoogleFonts.lexend(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: badgeForeground,
-                    ),
-                  ),
-                ),
+                child: badge == null
+                    ? const SizedBox(height: 18)
+                    : Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: badge!.bg,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          badge!.text,
+                          style: GoogleFonts.lexend(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: badge!.fg,
+                          ),
+                        ),
+                      ),
               ),
               const SizedBox(height: 10),
               Expanded(
@@ -881,8 +883,14 @@ class _FeaturedWordsStrip extends StatelessWidget {
       }
     }
 
-    active.sort((a, b) => seenKey(b).compareTo(seenKey(a)));
-    return active.take(16).toList();
+    active.sort((a, b) {
+      final byLevel = b.boxLevel.compareTo(a.boxLevel);
+      if (byLevel != 0) {
+        return byLevel;
+      }
+      return seenKey(b).compareTo(seenKey(a));
+    });
+    return active.take(3).toList();
   }
 
   @override

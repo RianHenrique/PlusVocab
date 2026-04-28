@@ -8,6 +8,9 @@ import 'package:plus_vocab/features/home/views/home_screen.dart';
 import 'package:plus_vocab/features/temas/views/temas_screen.dart';
 import 'package:plus_vocab/features/dicionario/views/dicionario_screen.dart';
 import 'package:plus_vocab/features/configs/views/edit_profile_screen.dart';
+import 'package:plus_vocab/features/progress/controllers/progress_screen_controller.dart';
+import 'package:plus_vocab/features/progress/data/progress_service.dart';
+import 'package:plus_vocab/features/progress/views/my_progress_screen.dart';
 import 'package:provider/provider.dart';
 
 import '../../auth/controllers/auth_controller.dart';
@@ -78,12 +81,6 @@ class _ConfigScreenState extends State<ConfigScreen> {
     );
   }
 
-  void _notImplemented(String label) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$label — em breve.')),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
@@ -128,7 +125,17 @@ class _ConfigScreenState extends State<ConfigScreen> {
                       ),
                       _MenuRow(
                         title: 'Progresso',
-                        onTap: () => _notImplemented('Progresso'),
+                        onTap: () {
+                          Navigator.of(context).push<void>(
+                            MaterialPageRoute<void>(
+                              builder: (c) => ChangeNotifierProvider(
+                                create: (_) =>
+                                    ProgressScreenController(c.read<ProgressService>())..loadInitial(),
+                                child: const MyProgressScreen(),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                       _MenuRow(
                         title: 'Dicionário pessoal',

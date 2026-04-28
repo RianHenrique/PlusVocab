@@ -21,7 +21,8 @@ class ApiClient {
   }
   
   // Você pode até adicionar métodos helper
-  Future<Response> get(String path) => dio.get(path);
+  Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) =>
+      dio.get(path, queryParameters: queryParameters);
   Future<Response> post(String path, {dynamic data, Options? options}) =>
       dio.post(path, data: data, options: options);
   Future<Response> put(String path, {dynamic data}) => dio.put(path, data: data);

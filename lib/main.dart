@@ -4,6 +4,7 @@ import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/features/home/controllers/progress_home_controller.dart';
 import 'package:plus_vocab/features/home/models/progress_home_service.dart';
 import 'package:plus_vocab/features/home/views/home_screen.dart';
+import 'package:plus_vocab/features/progress/data/progress_service.dart';
 
 import 'package:provider/provider.dart';
 import 'features/auth/controllers/auth_controller.dart';
@@ -68,6 +69,10 @@ void main() {
 
         Provider<ProgressHomeService>(
           create: (context) => ProgressHomeService(context.read<ApiClient>()),
+        ),
+
+        Provider<ProgressService>(
+          create: (context) => ProgressService(context.read<ApiClient>()),
         ),
 
         // --- NÍVEL DE CONTROLLER ("C") ---

@@ -17,10 +17,8 @@ class TemasScreen extends StatefulWidget {
 class _TemasScreenState extends State<TemasScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
-  String? _tagSelecionada;
   String _ordenacao = 'alfabética';
 
-  static const _tagsMocadas = ['nível ouro', 'nível prata', 'nível bronze'];
   static const _opcoesOrdenacao = ['alfabética', 'mais recentes', 'mais antigas'];
 
   @override
@@ -45,13 +43,12 @@ class _TemasScreenState extends State<TemasScreen> {
       lista = lista.where((t) => t.name.toLowerCase().contains(q) || t.description.toLowerCase().contains(q)).toList();
     }
 
-    switch (_ordenacao) {
-      case 'alfabética':
-        lista.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-      case 'mais recentes':
-        lista.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      case 'mais antigas':
-        lista.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    if (_ordenacao == 'alfabética') {
+      lista.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    } else if (_ordenacao == 'mais recentes') {
+      lista.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    } else if (_ordenacao == 'mais antigas') {
+      lista.sort((a, b) => a.createdAt.compareTo(b.createdAt));
     }
 
     return lista;
@@ -273,31 +270,21 @@ class _TemasScreenState extends State<TemasScreen> {
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
       child: Row(
         children: [
-          // --- Filtrar por tag ---
-          Text('Tag', style: GoogleFonts.lexend(fontSize: 11, color: AppColors.textoSecundario)),
-          const SizedBox(width: 6),
-          Expanded(
-            flex: 4,
-            child: _DropdownFiltro<String?>(
-              value: _tagSelecionada,
-              items: [null, ..._tagsMocadas],
-              labelBuilder: (v) => v ?? 'todos',
-              onChanged: (v) => setState(() => _tagSelecionada = v),
-            ),
-          ),
-          const SizedBox(width: 12),
-          // --- Ordenar por ---
           Text('Ordenar', style: GoogleFonts.lexend(fontSize: 11, color: AppColors.textoSecundario)),
-          const SizedBox(width: 6),
+          const SizedBox(width: 8),
           Expanded(
-            flex: 5,
             child: _DropdownFiltro<String>(
               value: _ordenacao,
               items: _opcoesOrdenacao,
               labelBuilder: (v) => v,
-              onChanged: (v) { if (v != null) setState(() => _ordenacao = v); },
+              onChanged: (v) {
+                if (v != null) {
+                  setState(() => _ordenacao = v);
+                }
+              },
             ),
           ),
+          const Spacer(),
         ],
       ),
     );
@@ -424,20 +411,6 @@ class _TemaCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Badge de nível
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: AppColors.secundaria,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'nível ouro',
-                      style: GoogleFonts.lexend(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.branco),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // Título + ícones
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
