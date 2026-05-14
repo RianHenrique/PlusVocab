@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:plus_vocab/core/services/api_client.dart';
+import 'package:plus_vocab/features/progress/models/practice_history_models.dart';
 import 'package:plus_vocab/features/progress/models/progress_modalities_models.dart';
 import 'package:plus_vocab/features/progress/models/progress_overview_models.dart';
 import 'package:plus_vocab/features/progress/models/progress_themes_models.dart';
@@ -113,6 +114,27 @@ class ProgressService {
       throw e.response?.data?['message'] ??
           e.response?.data?['error'] ??
           'Erro ao carregar ranking da semana.';
+    }
+  }
+
+  Future<PracticeHistoryResponse> fetchPracticeHistory({
+    int limit = 100,
+    int offset = 0,
+  }) async {
+    try {
+      final response = await _apiClient.get(
+        '/progress/practices',
+        queryParameters: {'limit': limit, 'offset': offset},
+      );
+      final data = response.data;
+      if (data is! Map<String, dynamic>) {
+        throw 'Formato de resposta inválido.';
+      }
+      return PracticeHistoryResponse.fromJson(data);
+    } on DioException catch (e) {
+      throw e.response?.data?['message'] ??
+          e.response?.data?['error'] ??
+          'Erro ao carregar histórico de práticas.';
     }
   }
 }

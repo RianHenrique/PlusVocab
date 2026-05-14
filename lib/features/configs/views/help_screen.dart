@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:plus_vocab/core/services/storage_service.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
+import 'package:plus_vocab/features/home/views/home_screen.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HelpScreen extends StatefulWidget {
@@ -22,14 +25,34 @@ class _HelpScreenState extends State<HelpScreen> {
         _FrequentlyAskedQuestion(
           question: 'Como adicionar uma nova palavra?',
           answer:
-              'Você pode adicionar novas palavras nos exercícios e na tela de dicionário pessoal. '
-              'Basta selecionar a palavra e confirmar o salvamento.',
+              'Você pode adicionar novas palavras nos exercícios e na tela de Dicionário Pessoal. '
+              'Durante um exercício, toque no + para adicionar palavras que você não conhece. No Dicionário, use o botão de adicionar '
+              'no canto da tela para incluir qualquer palavra manualmente.',
         ),
         _FrequentlyAskedQuestion(
-          question: 'Quais são as modalidades de exercício e como funcionam?',
+          question: 'O que são as caixas?',
           answer:
-              'O +Vocab oferece modalidades como completar diálogos, preencher lacunas, compreensão '
-              'auditiva e associação de vocabulário. Cada prática é personalizada para o seu nível e dificuldades.',
+              'As caixas representam o sistema de repetição espaçada — uma técnica de memorização que '
+              'mostra cada palavra com mais ou menos frequência conforme o seu desempenho.\n\n'
+              'Toda palavra começa na Caixa 1 (revisada com mais frequência). Quando você acerta '
+              'repetidamente, a palavra avança para caixas maiores e aparece cada vez menos, pois '
+              'já está consolidada na sua memória. Se você errar, ela volta para uma caixa anterior.\n\n'
+              'Você pode acompanhar em qual caixa cada palavra está na tela de Dicionário Pessoal ou Progresso, '
+              'tocando em qualquer palavra da lista.',
+        ),
+        _FrequentlyAskedQuestion(
+          question: 'Quais são as modalidades de exercício e o que cada uma treina?',
+          answer:
+              'O +Vocab oferece quatro modalidades, cada uma trabalhando um aspecto diferente do aprendizado:\n\n'
+              '• Completar diálogos — você lê uma conversa com lacunas e escolhe a palavra que completa '
+              'o sentido. Treina vocabulário em contexto real e compreensão de uso natural da língua.\n\n'
+              '• Preencher lacunas — uma frase é apresentada com uma palavra faltando e você digita a '
+              'resposta. Reforça a escrita ativa e a fixação da forma correta das palavras.\n\n'
+              '• Compreensão auditiva — você ouve um áudio e responde perguntas sobre o conteúdo. '
+              'Desenvolve a escuta e a associação entre som e significado.\n\n'
+              '• Associação de vocabulário — você combina palavras com suas traduções ou definições. '
+              'Fortalece o reconhecimento rápido e a memória visual do vocabulário.\n\n'
+              'As modalidades são combinadas automaticamente em cada sessão para garantir uma prática variada.',
         ),
         _FrequentlyAskedQuestion(
           question: 'Posso criar um tema sem iniciá-lo imediatamente?',
@@ -44,6 +67,16 @@ class _HelpScreenState extends State<HelpScreen> {
     _topicController.dispose();
     _emailBodyController.dispose();
     super.dispose();
+  }
+
+  Future<void> _reverTour() async {
+    final storage = context.read<StorageService>();
+    await storage.clearHomeTourSeen();
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
+      (route) => false,
+    );
   }
 
   Future<void> _sendTopicSuggestion() async {
@@ -127,6 +160,35 @@ class _HelpScreenState extends State<HelpScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   _buildHeader(context),
+                  const SizedBox(height: 22),
+                  GestureDetector(
+                    onTap: _reverTour,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaria.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.primaria.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: <Widget>[
+                          const Icon(Icons.tour_outlined, color: AppColors.primaria, size: 22),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Rever tour pelo app',
+                              style: GoogleFonts.lexend(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primaria,
+                              ),
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right, color: AppColors.primaria, size: 20),
+                        ],
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 22),
                   Text(
                     'FAQ (Perguntas Frequentes):',

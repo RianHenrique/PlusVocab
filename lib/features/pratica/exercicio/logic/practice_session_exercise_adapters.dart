@@ -215,10 +215,13 @@ abstract final class PracticeSessionExerciseAdapters {
     final before = full.substring(0, splitAt);
     final after = full.substring(splitAt + markerLen);
 
+    final wordOptions = _stringList(item.options)..shuffle();
+
     return FillInTheBlanksQuestion(
       textBeforeBlank: before,
       textAfterBlank: after,
       acceptedAnswers: [gabarito],
+      wordOptions: wordOptions.isNotEmpty ? wordOptions : const [],
     );
   }
 

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
 
+const _kSpeedLabels = ['Devagar', 'Normal', 'Rápido'];
+
 class DialogueCompletionPracticeBody extends StatelessWidget {
   const DialogueCompletionPracticeBody({
     super.key,
@@ -15,6 +17,8 @@ class DialogueCompletionPracticeBody extends StatelessWidget {
     this.transcriptFeedbackCorrect,
     this.onSkip,
     this.microphoneEnabled = true,
+    this.speedIndex = 1,
+    this.onSpeedChanged,
   });
 
   final String promptLine;
@@ -26,6 +30,10 @@ class DialogueCompletionPracticeBody extends StatelessWidget {
   final VoidCallback onMicPointerUpOrCancel;
   final bool? transcriptFeedbackCorrect;
   final bool microphoneEnabled;
+
+  /// Índice da velocidade de reprodução: 0 = devagar, 1 = normal, 2 = rápido.
+  final int speedIndex;
+  final ValueChanged<int>? onSpeedChanged;
 
   /// Se não for nulo, exibe o botão "Pular" ao final (preenche resposta inválida e segue o fluxo de envio).
   final VoidCallback? onSkip;
@@ -114,6 +122,45 @@ class DialogueCompletionPracticeBody extends StatelessWidget {
               );
             }),
           ),
+          const SizedBox(height: 10),
+          // Seletor de velocidade de reprodução
+          if (onSpeedChanged != null)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(_kSpeedLabels.length, (i) {
+                final active = speedIndex == i;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: GestureDetector(
+                    onTap: () => onSpeedChanged!(i),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 120),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: active ? AppColors.primaria : Colors.transparent,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: active
+                              ? AppColors.primaria
+                              : AppColors.bordaCampo,
+                        ),
+                      ),
+                      child: Text(
+                        _kSpeedLabels[i],
+                        style: GoogleFonts.lexend(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: active
+                              ? AppColors.branco
+                              : AppColors.textoSuave,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
           const SizedBox(height: 16),
           Text(
             'Segure para gravar',

@@ -56,79 +56,81 @@ class ExercisePracticeShell extends StatelessWidget {
             ),
           ),
           SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            child: Stack(
               children: [
-                if (leading != null)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8, top: 4),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: leading,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                      child: Column(
+                        children: [
+                          Text(
+                            statusLabel,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.lexend(
+                              fontSize: 13,
+                              color: AppColors.textoSuave,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            practiceTitle,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.lexend(
+                              fontSize: 19,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primaria,
+                              height: 1.22,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          ExerciseProgressDots(
+                            total: totalSteps,
+                            currentIndex: currentStepIndex,
+                          ),
+                          const SizedBox(height: 12),
+                          ExerciseModalityLabel(
+                            label: modalityLabel,
+                            onInfoTap: onModalityInfoTap,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-                  child: Column(
-                    children: [
-                      Text(
-                        statusLabel,
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.lexend(
-                          fontSize: 13,
-                          color: AppColors.textoSuave,
-                        ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 4, 24, 8),
+                        child: miolo,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        practiceTitle,
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.lexend(
-                          fontSize: 19,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primaria,
-                          height: 1.22,
-                        ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (footerBeforeSubmit != null) ...[
+                            footerBeforeSubmit!,
+                            const SizedBox(height: 12),
+                          ],
+                          ExerciseSubmitBar(
+                            canSubmit: canSubmit,
+                            onSubmit: onSubmit,
+                            submitLabel: submitLabel,
+                            abandonLabel: abandonLabel,
+                            onAbandon: onAbandonPractice,
+                            showAbandon: showAbandonAction,
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 12),
-                      ExerciseProgressDots(
-                        total: totalSteps,
-                        currentIndex: currentStepIndex,
-                      ),
-                      const SizedBox(height: 12),
-                      ExerciseModalityLabel(
-                        label: modalityLabel,
-                        onInfoTap: onModalityInfoTap,
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 4, 24, 8),
-                    child: miolo,
+                if (leading != null)
+                  Positioned(
+                    top: 16,
+                    right: 8,
+                    child: leading!,
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (footerBeforeSubmit != null) ...[
-                        footerBeforeSubmit!,
-                        const SizedBox(height: 12),
-                      ],
-                      ExerciseSubmitBar(
-                        canSubmit: canSubmit,
-                        onSubmit: onSubmit,
-                        submitLabel: submitLabel,
-                        abandonLabel: abandonLabel,
-                        onAbandon: onAbandonPractice,
-                        showAbandon: showAbandonAction,
-                      ),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),

@@ -10,6 +10,8 @@ import 'package:plus_vocab/features/pratica/exercicio/modalidades/dialogue_compl
 import 'package:plus_vocab/features/pratica/exercicio/modalidades/fill_in_the_blanks_practice_body.dart';
 import 'package:plus_vocab/features/pratica/exercicio/modalidades/listening_comprehension_practice_body.dart';
 import 'package:plus_vocab/features/pratica/exercicio/modalidades/vocabulary_match_practice_body.dart';
+import 'package:plus_vocab/features/dicionario/models/dicionario_service.dart';
+import 'package:plus_vocab/features/home/controllers/progress_home_controller.dart';
 import 'package:plus_vocab/features/pratica/exercicio/models/fill_in_the_blanks_models.dart';
 import 'package:plus_vocab/features/pratica/exercicio/models/listening_comprehension_models.dart';
 import 'package:plus_vocab/features/pratica/exercicio/data/vocab_practice_service.dart';
@@ -113,6 +115,13 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
   bool _listeningSpeaking = false;
   bool _isBetweenExercises = false;
 
+  /// 0 = devagar (0.30), 1 = normal (0.45), 2 = rápido (0.60)
+  int _ttsSpeedIndex = 1;
+  static const List<double> _kSpeedRates = [0.30, 0.45, 0.60];
+
+  /// Índices de exercícios inválidos detectados na validação inicial.
+  final Set<int> _invalidExerciseIndices = {};
+
   /// Ordem embaralhada fixa por índice (evita re-sort a cada rebuild).
   final Map<int, VocabularyMatchQuestion> _vocabularyQuestionByIndex = {};
   final Map<int, ListeningComprehensionQuestion> _listeningQuestionByIndex = {};
@@ -206,7 +215,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
     final q = _dialogueQuestionForIndex(_currentIndex);
     if (index < 0 || index >= q.obscuredLineAudios.length) return;
     await _tts.setLanguage(q.ttsLanguage);
-    await _tts.setSpeechRate(0.48);
+    await _tts.setSpeechRate(_kSpeedRates[_ttsSpeedIndex]);
     await _tts.setVolume(1.0);
     await _tts.setPitch(1.0);
     await _tts.stop();
@@ -310,6 +319,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
     _tts.setCompletionHandler(() {
       if (mounted) setState(() => _listeningSpeaking = false);
     });
+    _validateAllExercises();
     _syncFillControllerFromSlot();
     if (!_isReviewMode) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -408,6 +418,258 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
     return PracticeSessionReviewSnapshot(slots: slots, resultados: resultados);
   }
 
+  void _validateAllExercises() {
+    for (var i = 0; i < _total; i++) {
+      final item = _session.exercicios[i];
+      try {
+        switch (item.modalidade) {
+          case PracticeExerciseModality.vocabMatch:
+            _vocabularyQuestionForIndex(i);
+          case PracticeExerciseModality.listeningComprehension:
+            _listeningQuestionForIndex(i);
+          case PracticeExerciseModality.fillBlanks:
+            PracticeSessionExerciseAdapters.fillBlanksFromItem(item);
+          case PracticeExerciseModality.dialogueCompletion:
+            PracticeSessionExerciseAdapters.dialogueCompletionFromItem(item);
+          default:
+            break;
+        }
+      } on StateError {
+        _invalidExerciseIndices.add(i);
+      }
+    }
+    if (_invalidExerciseIndices.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${_invalidExerciseIndices.length} exercício(s) com dados incompletos foram identificados e poderão ser pulados.',
+              style: GoogleFonts.lexend(color: AppColors.branco),
+            ),
+            backgroundColor: AppColors.textoAzul,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      });
+    }
+  }
+
+  Widget _buildInvalidExerciseWidget() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.warning_amber_rounded,
+                size: 48, color: AppColors.erro),
+            const SizedBox(height: 12),
+            Text(
+              'Exercício com dados inválidos',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.lexend(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppColors.erro,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Este exercício não pode ser exibido.\nToque em "Próximo" para continuar.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.lexend(
+                fontSize: 14,
+                color: AppColors.textoSuave,
+                height: 1.35,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showAddWordDialog() async {
+    final service = context.read<DicionarioService>();
+    final wordController = TextEditingController();
+    final palavras = _currentItem.palavrasChave;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        var loading = false;
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            final canAdd =
+                wordController.text.trim().isNotEmpty && !loading;
+            return PopScope(
+              canPop: !loading,
+              child: AlertDialog(
+                title: Text(
+                  'Adicionar ao dicionário',
+                  style: GoogleFonts.lexend(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textoAzul),
+                ),
+                content: loading
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const CircularProgressIndicator(
+                              color: AppColors.primaria),
+                          const SizedBox(height: 20),
+                          Text(
+                            'Adicionando ao dicionário…',
+                            textAlign: TextAlign.center,
+                            style:
+                                GoogleFonts.lexend(fontSize: 14, height: 1.4),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          TextField(
+                            controller: wordController,
+                            autofocus: true,
+                            textCapitalization: TextCapitalization.none,
+                            style: GoogleFonts.lexend(fontSize: 15),
+                            decoration: InputDecoration(
+                              hintText: 'Digite a palavra',
+                              hintStyle: GoogleFonts.lexend(
+                                  fontSize: 14,
+                                  color: AppColors.textoHint),
+                              contentPadding:
+                                  const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 10),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                    color: AppColors.primaria, width: 2),
+                              ),
+                            ),
+                            onChanged: (_) => setDialogState(() {}),
+                          ),
+                          if (palavras.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            Text(
+                              'Sugestões:',
+                              style: GoogleFonts.lexend(
+                                  fontSize: 12,
+                                  color: AppColors.textoSuave),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: palavras.map((w) {
+                                return GestureDetector(
+                                  onTap: () {
+                                    wordController.text = w;
+                                    setDialogState(() {});
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primaria
+                                          .withValues(alpha: 0.08),
+                                      borderRadius:
+                                          BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: AppColors.primaria
+                                            .withValues(alpha: 0.3),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      w,
+                                      style: GoogleFonts.lexend(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.primaria,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ],
+                      ),
+                actions: loading
+                    ? const <Widget>[]
+                    : [
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          child: Text('Cancelar',
+                              style: GoogleFonts.lexend(
+                                  color: AppColors.textoSecundario)),
+                        ),
+                        FilledButton(
+                          onPressed: canAdd
+                              ? () async {
+                                  final w =
+                                      wordController.text.trim();
+                                  if (w.isEmpty) return;
+                                  setDialogState(() => loading = true);
+                                  final label = w[0].toUpperCase() +
+                                      w.substring(1);
+                                  try {
+                                    final result =
+                                        await service.adicionarPalavra(w);
+                                    if (!ctx.mounted) return;
+                                    Navigator.of(ctx).pop();
+                                    if (!context.mounted) return;
+                                    final msg = result.reativada
+                                        ? 'A palavra "$label" já estava no dicionário e foi reativada.'
+                                        : 'Palavra "$label" adicionada ao dicionário.';
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(
+                                      SnackBar(
+                                        content: Text(msg,
+                                            style: GoogleFonts.lexend(
+                                                color: AppColors.branco)),
+                                        backgroundColor: AppColors.primaria,
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    if (!ctx.mounted) return;
+                                    Navigator.of(ctx).pop();
+                                    if (!context.mounted) return;
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(
+                                      SnackBar(
+                                        content: Text(e.toString(),
+                                            style: GoogleFonts.lexend(
+                                                color: AppColors.branco)),
+                                        backgroundColor: AppColors.erro,
+                                      ),
+                                    );
+                                  }
+                                }
+                              : null,
+                          style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.primaria),
+                          child: Text('Adicionar',
+                              style: GoogleFonts.lexend(
+                                  color: AppColors.branco)),
+                        ),
+                      ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+  }
+
   void _syncFillControllerFromSlot() {
     if (_currentItem.modalidade == PracticeExerciseModality.fillBlanks) {
       _fillController.text = _slots[_currentIndex].fillDraft;
@@ -443,7 +705,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
 
   Future<void> _configureTtsForListening(PracticeExerciseItem item) async {
     await _tts.setLanguage('en-US');
-    await _tts.setSpeechRate(0.45);
+    await _tts.setSpeechRate(_kSpeedRates[_ttsSpeedIndex]);
     await _tts.setVolume(1.0);
     await _tts.setPitch(1.0);
   }
@@ -458,6 +720,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
   }
 
   bool _canSubmitCurrent() {
+    if (_invalidExerciseIndices.contains(_currentIndex)) return true;
     final item = _currentItem;
     switch (item.modalidade) {
       case PracticeExerciseModality.vocabMatch:
@@ -606,6 +869,24 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
   void _onPrimarySubmit() {
     if (!_canSubmitCurrent() || _isBetweenExercises) return;
 
+    // Exercício com dados inválidos: registra como errado e avança.
+    if (_invalidExerciseIndices.contains(_currentIndex)) {
+      final item = _currentItem;
+      _resultados[_currentIndex] = ExerciseResultEntry(
+        palavrasChave: List<String>.from(item.palavrasChave),
+        modalidade: item.modalidade,
+        foiCorreto: false,
+      );
+      unawaited(_finishExerciseStep(
+        const PracticeFeedbackContent(
+          isCorrect: false,
+          correctAnswerText: '',
+          hideAnswerDetails: true,
+        ),
+      ));
+      return;
+    }
+
     final item = _currentItem;
     final slot = _slots[_currentIndex];
 
@@ -739,29 +1020,77 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
       builder: (dialogContext) {
         return PopScope(
           canPop: false,
-          child: AlertDialog(
-            content: Row(
-              children: [
-                const SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    color: AppColors.primaria,
-                  ),
-                ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Text(
-                    'Enviando seu desempenho para a nuvem…',
-                    style: GoogleFonts.lexend(
-                      fontSize: 15,
-                      height: 1.35,
-                      color: AppColors.textoPreto,
+          child: Dialog.fullscreen(
+            child: Scaffold(
+              backgroundColor: AppColors.branco,
+              body: Stack(
+                children: [
+                  SizedBox.expand(
+                    child: Image.asset(
+                      'assets/images/background.png',
+                      fit: BoxFit.cover,
+                      opacity: const AlwaysStoppedAnimation(0.25),
                     ),
                   ),
-                ),
-              ],
+                  SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 28, vertical: 32),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Prática finalizada',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.lexend(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textoAzul,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            widget.practiceTitle,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.lexend(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primaria,
+                            ),
+                          ),
+                          Expanded(
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Image.asset(
+                                    'assets/images/fox_sentada.png',
+                                    width: 180,
+                                  ),
+                                  const SizedBox(height: 24),
+                                  const CircularProgressIndicator(
+                                    strokeWidth: 3,
+                                    color: AppColors.primaria,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Salvando o seu progresso',
+                                    style: GoogleFonts.lexend(
+                                      fontSize: 16,
+                                      height: 1.35,
+                                      color: AppColors.textoPreto,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -808,7 +1137,10 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
         builder: (context) => PracticeSessionSummaryScreen(
           outcome: outcome,
           lessonTitle: titleForReplay,
-          onLeavePractice: () => Navigator.of(context).pop(),
+          onLeavePractice: () {
+              context.read<ProgressHomeController>().atualizar();
+              Navigator.of(context).pop();
+            },
           onReviewQuestionTap: (exerciseIndex) {
             Navigator.of(context).push(
               MaterialPageRoute<void>(
@@ -921,82 +1253,117 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
   }
 
   Widget _buildMiolo(PracticeExerciseItem item) {
+    if (_invalidExerciseIndices.contains(_currentIndex)) {
+      return _buildInvalidExerciseWidget();
+    }
+
     final readOnlyReview = _isReviewMode;
     switch (item.modalidade) {
       case PracticeExerciseModality.vocabMatch:
-        final q = _vocabularyQuestionForIndex(_currentIndex);
-        final slot = _slots[_currentIndex];
-        slot.vocabularyAssociations ??=
-            List<int?>.filled(q.definitions.length, null);
-        return VocabularyMatchPracticeBody(
-          question: q,
-          selectedWordIndex: slot.vocabularySelectedWord,
-          associations: slot.vocabularyAssociations!,
-          isInteractionEnabled: !readOnlyReview,
-          onWordTap: (i) {
-            if (readOnlyReview) return;
-            setState(() {
-              slot.vocabularyFeedback = null;
-              slot.vocabularySelectedWord =
-                  slot.vocabularySelectedWord == i ? null : i;
-            });
-          },
-          onDefinitionTap: (definitionIndex) {
-            if (readOnlyReview) return;
-            final selected = slot.vocabularySelectedWord;
-            if (selected == null) return;
-            setState(() {
-              slot.vocabularyFeedback = null;
-              for (var i = 0; i < slot.vocabularyAssociations!.length; i++) {
-                if (slot.vocabularyAssociations![i] == selected) {
-                  slot.vocabularyAssociations![i] = null;
+        try {
+          final q = _vocabularyQuestionForIndex(_currentIndex);
+          final slot = _slots[_currentIndex];
+          slot.vocabularyAssociations ??=
+              List<int?>.filled(q.definitions.length, null);
+          return VocabularyMatchPracticeBody(
+            question: q,
+            selectedWordIndex: slot.vocabularySelectedWord,
+            associations: slot.vocabularyAssociations!,
+            isInteractionEnabled: !readOnlyReview,
+            onWordTap: (i) {
+              if (readOnlyReview) return;
+              setState(() {
+                slot.vocabularyFeedback = null;
+                slot.vocabularySelectedWord =
+                    slot.vocabularySelectedWord == i ? null : i;
+              });
+            },
+            onDefinitionTap: (definitionIndex) {
+              if (readOnlyReview) return;
+              final selected = slot.vocabularySelectedWord;
+              if (selected == null) return;
+              setState(() {
+                slot.vocabularyFeedback = null;
+                for (var i = 0; i < slot.vocabularyAssociations!.length; i++) {
+                  if (slot.vocabularyAssociations![i] == selected) {
+                    slot.vocabularyAssociations![i] = null;
+                  }
                 }
-              }
-              slot.vocabularyAssociations![definitionIndex] = selected;
-              slot.vocabularySelectedWord = null;
-            });
-          },
-          feedback: slot.vocabularyFeedback,
-        );
+                slot.vocabularyAssociations![definitionIndex] = selected;
+                slot.vocabularySelectedWord = null;
+              });
+            },
+            onWordDroppedOnDefinition: readOnlyReview
+                ? null
+                : (defIndex, wordIndex) {
+                    setState(() {
+                      slot.vocabularyFeedback = null;
+                      for (var i = 0;
+                          i < slot.vocabularyAssociations!.length;
+                          i++) {
+                        if (slot.vocabularyAssociations![i] == wordIndex) {
+                          slot.vocabularyAssociations![i] = null;
+                        }
+                      }
+                      slot.vocabularyAssociations![defIndex] = wordIndex;
+                      slot.vocabularySelectedWord = null;
+                    });
+                  },
+            feedback: slot.vocabularyFeedback,
+          );
+        } on StateError {
+          return _buildInvalidExerciseWidget();
+        }
 
       case PracticeExerciseModality.listeningComprehension:
-        final q = _listeningQuestionForIndex(_currentIndex);
-        final slot = _slots[_currentIndex];
-        return ListeningComprehensionPracticeBody(
-          onPlayListening: () => _playListening(item),
-          isPlayingListening: _listeningSpeaking,
-          questionText: q.questionText,
-          options: q.options,
-          selectedOptionIndex: slot.listeningSelected,
-          isInteractionEnabled: !readOnlyReview,
-          onOptionSelected: (i) {
-            if (readOnlyReview) return;
-            setState(() {
-              if (slot.listeningShowResult) {
-                slot.listeningShowResult = false;
-                slot.listeningSubmitted = null;
-              }
-              slot.listeningSelected = slot.listeningSelected == i ? null : i;
-            });
-          },
-          showResult: slot.listeningShowResult,
-          correctOptionIndex: q.correctOptionIndex,
-          submittedOptionIndex: slot.listeningSubmitted,
-        );
+        try {
+          final q = _listeningQuestionForIndex(_currentIndex);
+          final slot = _slots[_currentIndex];
+          return ListeningComprehensionPracticeBody(
+            onPlayListening: () => _playListening(item),
+            isPlayingListening: _listeningSpeaking,
+            questionText: q.questionText,
+            options: q.options,
+            selectedOptionIndex: slot.listeningSelected,
+            isInteractionEnabled: !readOnlyReview,
+            onOptionSelected: (i) {
+              if (readOnlyReview) return;
+              setState(() {
+                if (slot.listeningShowResult) {
+                  slot.listeningShowResult = false;
+                  slot.listeningSubmitted = null;
+                }
+                slot.listeningSelected = slot.listeningSelected == i ? null : i;
+              });
+            },
+            showResult: slot.listeningShowResult,
+            correctOptionIndex: q.correctOptionIndex,
+            submittedOptionIndex: slot.listeningSubmitted,
+            speedIndex: _ttsSpeedIndex,
+            onSpeedChanged: readOnlyReview
+                ? null
+                : (i) => setState(() => _ttsSpeedIndex = i),
+          );
+        } on StateError {
+          return _buildInvalidExerciseWidget();
+        }
 
       case PracticeExerciseModality.fillBlanks:
-        final q = PracticeSessionExerciseAdapters.fillBlanksFromItem(item);
-        return FillInTheBlanksPracticeBody(
-          textBeforeBlank: q.textBeforeBlank,
-          textAfterBlank: q.textAfterBlank,
-          answerController: _fillController,
-          placeholder: q.placeholder,
-          onAnswerChanged: () {
-            setState(() {});
-          },
-          fieldBorderColor: _fillBorderColor(item),
-          readOnly: readOnlyReview,
-        );
+        try {
+          final q = PracticeSessionExerciseAdapters.fillBlanksFromItem(item);
+          return FillInTheBlanksPracticeBody(
+            textBeforeBlank: q.textBeforeBlank,
+            textAfterBlank: q.textAfterBlank,
+            answerController: _fillController,
+            placeholder: q.placeholder,
+            onAnswerChanged: () => setState(() {}),
+            fieldBorderColor: _fillBorderColor(item),
+            readOnly: readOnlyReview,
+            wordOptions: q.wordOptions,
+          );
+        } on StateError {
+          return _buildInvalidExerciseWidget();
+        }
 
       case PracticeExerciseModality.dialogueCompletion:
         try {
@@ -1013,19 +1380,13 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
             transcriptFeedbackCorrect: slot.dialogueTranscriptFeedback,
             onSkip: readOnlyReview ? null : _skipDialogueExercise,
             microphoneEnabled: !readOnlyReview,
+            speedIndex: _ttsSpeedIndex,
+            onSpeedChanged: readOnlyReview
+                ? null
+                : (i) => setState(() => _ttsSpeedIndex = i),
           );
-        } on StateError catch (e) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'Não foi possível montar este exercício.\n\n$e',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.lexend(
-                    fontSize: 14, color: AppColors.erro, height: 1.35),
-              ),
-            ),
-          );
+        } on StateError {
+          return _buildInvalidExerciseWidget();
         }
 
       default:
@@ -1066,6 +1427,19 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
       submitLabel: submitLabel,
       showAbandonAction: !_isReviewMode,
       footerBeforeSubmit: _buildFooterBeforeSubmit(item),
+      leading: _isReviewMode
+          ? null
+          : IconButton(
+              icon: const Icon(Icons.add_circle_outline_rounded),
+              color: AppColors.primaria,
+              tooltip: 'Adicionar palavra ao dicionário',
+              onPressed: _showAddWordDialog,
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              style: IconButton.styleFrom(
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+            ),
     );
   }
 }

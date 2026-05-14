@@ -5,12 +5,17 @@ class FillInTheBlanksQuestion {
     required this.textAfterBlank,
     required this.acceptedAnswers,
     this.placeholder = 'Escreva aqui sua resposta',
+    this.wordOptions = const [],
   });
 
   final String textBeforeBlank;
   final String textAfterBlank;
   final List<String> acceptedAnswers;
   final String placeholder;
+
+  /// Opções de escrita fornecidas pelo backend (ex.: variações ortográficas da palavra).
+  /// Quando não vazias, são exibidas como chips clicáveis acima do campo de texto.
+  final List<String> wordOptions;
 
   void assertValid() {
     assert(textBeforeBlank.isNotEmpty || textAfterBlank.isNotEmpty, 'A frase não pode ser vazia');

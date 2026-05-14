@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/features/home/controllers/progress_home_controller.dart';
@@ -9,8 +10,8 @@ import 'package:plus_vocab/features/progress/data/progress_service.dart';
 import 'package:provider/provider.dart';
 import 'features/auth/controllers/auth_controller.dart';
 import 'features/auth/models/auth_service.dart';
-import 'features/auth/views/signin_screen.dart';
 import 'features/auth/views/onboarding_screen.dart';
+import 'features/auth/views/welcome_screen.dart';
 import 'features/pratica/exercicio/data/vocab_practice_service.dart';
 import 'features/temas/models/temas_service.dart';
 import 'features/temas/controllers/temas_controller.dart';
@@ -20,7 +21,12 @@ import 'features/user/models/user_service.dart';
 import 'core/services/api_client.dart';
 import 'core/services/storage_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   runApp(
     MultiProvider(
       providers: [
@@ -143,7 +149,7 @@ class MyApp extends StatelessWidget {
                 },
               );
             } else {
-              return const SignInScreen();
+              return const WelcomeScreen();
             }
           }
         },

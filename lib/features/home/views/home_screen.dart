@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:plus_vocab/components/profile_circle.dart';
+import 'package:plus_vocab/core/services/storage_service.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/features/auth/controllers/auth_controller.dart';
+import 'package:plus_vocab/features/tour/home_tour_overlay.dart';
 import 'package:plus_vocab/features/dicionario/controllers/dicionario_controller.dart';
 import 'package:plus_vocab/features/dicionario/models/palavra_model.dart';
 import 'package:plus_vocab/features/dicionario/views/dicionario_screen.dart';
@@ -29,16 +31,129 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _contextoPraticaController = TextEditingController();
+  final _scrollController = ScrollController();
+
+  // Chaves para o tour
+  final _keyInputField = GlobalKey();
+  final _keySummaryCard = GlobalKey();
+  final _keyTemasSection = GlobalKey();
+  final _keyPalavrasSection = GlobalKey();
+
+  // Estado do tour
+  bool _tourActive = false;
+  int _tourStep = 0;
+  Rect? _spotlightRect;
+  late final List<TourStep> _tourSteps;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    _tourSteps = [
+      const TourStep(
+        title: 'Aqui é sua central de aprendizado',
+        body: 'Você escolhe o que praticar e acompanha sua evolução.',
+      ),
+      TourStep(
+        targetKey: _keyInputField,
+        title: 'Temas são cenários personalizados',
+        body: 'Você escolhe situações do seu interesse para praticar inglês, como viagem ou trabalho.',
+      ),
+      TourStep(
+        targetKey: _keySummaryCard,
+        title: 'Acompanhe sua evolução',
+        body: 'Veja práticas feitas e desempenho ao longo do tempo.',
+      ),
+      TourStep(
+        targetKey: _keyTemasSection,
+        title: 'Pratique por cenários',
+        body: 'Escolha um tema e treine dentro daquela situação.',
+      ),
+      TourStep(
+        targetKey: _keyPalavrasSection,
+        title: 'Palavras em aprendizado',
+        body: 'Essas palavras aparecem nas práticas para reforço contínuo.',
+      ),
+      TourStep(
+        targetKey: _keyInputField,
+        title: 'Vamos criar seu primeiro cenário',
+        body: 'Descreva uma situação onde você usaria inglês e gere seu primeiro tema.',
+        ctaLabel: 'Criar tema',
+      ),
+    ];
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       context.read<ProgressHomeController>().carregar();
       context.read<DicionarioController>().forcarAtualizacao();
       context.read<TemasController>().forcarAtualizacaoListaTemas();
+
+      final hasSeen = await context.read<StorageService>().hasSeenHomeTour();
+      if (!hasSeen && mounted) {
+        await Future.delayed(const Duration(milliseconds: 600));
+        if (mounted) _startTour();
+      }
     });
+  }
+
+  void _startTour() {
+    setState(() {
+      _tourActive = true;
+      _tourStep = 0;
+      _spotlightRect = null;
+    });
+  }
+
+  Future<void> _goToTourStep(int step) async {
+    if (step >= _tourSteps.length) {
+      await _endTour();
+      return;
+    }
+    final s = _tourSteps[step];
+    if (s.targetKey != null) {
+      final ctx = s.targetKey!.currentContext;
+      if (ctx != null) {
+        try {
+          await Scrollable.ensureVisible(
+            ctx,
+            duration: const Duration(milliseconds: 380),
+            curve: Curves.easeInOut,
+            alignment: 0.25,
+          );
+          await Future.delayed(const Duration(milliseconds: 60));
+          if (!mounted) return;
+          // Re-acessa via GlobalKey após o scroll para evitar ctx stale
+          final box =
+              s.targetKey!.currentContext?.findRenderObject() as RenderBox?;
+          if (box != null && box.hasSize) {
+            setState(() {
+              _tourStep = step;
+              _spotlightRect = box.localToGlobal(Offset.zero) & box.size;
+            });
+            return;
+          }
+        } catch (_) {}
+      }
+    }
+    setState(() {
+      _tourStep = step;
+      _spotlightRect = null;
+    });
+  }
+
+  Future<void> _endTour({bool openCriarTema = false}) async {
+    final nav = Navigator.of(context);
+    final contexto = _contextoPraticaController.text.trim();
+    final storage = context.read<StorageService>();
+    await storage.setHomeTourSeen();
+    if (!mounted) return;
+    setState(() => _tourActive = false);
+    if (openCriarTema) {
+      nav.push(
+        MaterialPageRoute<void>(
+          builder: (_) => CriarTemaScreen(contexto: contexto),
+        ),
+      );
+    }
   }
 
   Future<void> _onRefresh() async {
@@ -61,6 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _contextoPraticaController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -82,6 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
               color: AppColors.primaria,
               onRefresh: _onRefresh,
               child: SingleChildScrollView(
+                controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 child: Column(
@@ -161,6 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 10),
                     Container(
+                      key: _keyInputField,
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
                         color: AppColors.branco,
@@ -203,6 +321,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Consumer<ProgressHomeController>(
                       builder: (context, progressCtrl, _) {
                         return _LearningSummaryCard(
+                          key: _keySummaryCard,
                           controller: progressCtrl,
                           onVerProgresso: () {
                             Navigator.of(context).push(
@@ -219,35 +338,60 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     ),
                     const SizedBox(height: 28),
-                    _SectionHeader(
-                      title: 'Temas em destaque',
-                      actionLabel: 'Ver todos',
-                      onAction: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(builder: (_) => const TemasScreen()),
-                        );
-                      },
+                    Column(
+                      key: _keyTemasSection,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _SectionHeader(
+                          title: 'Temas em destaque',
+                          actionLabel: 'Ver todos',
+                          onAction: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(builder: (_) => const TemasScreen()),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        const _FeaturedTemasStrip(),
+                      ],
                     ),
-                    const SizedBox(height: 12),
-                    const _FeaturedTemasStrip(),
                     const SizedBox(height: 28),
-                    _SectionHeader(
-                      title: 'Palavras em destaque',
-                      actionLabel: 'Ver todos',
-                      onAction: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(builder: (_) => const DicionarioScreen()),
-                        );
-                      },
+                    Column(
+                      key: _keyPalavrasSection,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _SectionHeader(
+                          title: 'Palavras em destaque',
+                          actionLabel: 'Ver todos',
+                          onAction: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(builder: (_) => const DicionarioScreen()),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        const _FeaturedWordsStrip(),
+                      ],
                     ),
-                    const SizedBox(height: 12),
-                    const _FeaturedWordsStrip(),
                     const SizedBox(height: 32),
                   ],
                 ),
               ),
             ),
           ),
+          if (_tourActive)
+            HomeTourOverlay(
+              step: _tourSteps[_tourStep],
+              spotlightRect: _spotlightRect,
+              stepIndex: _tourStep,
+              totalSteps: _tourSteps.length,
+              onNext: () => _goToTourStep(_tourStep + 1),
+              onSkip: () => _endTour(),
+              onBack: _tourStep > 0 ? () => _goToTourStep(_tourStep - 1) : null,
+              onCta: _tourStep == _tourSteps.length - 1
+                  ? () => _endTour(openCriarTema: true)
+                  : null,
+            ),
         ],
       ),
     );
@@ -305,6 +449,7 @@ const Color _summaryLabelBlue = Color(0xFF3B82F6);
 
 class _LearningSummaryCard extends StatelessWidget {
   const _LearningSummaryCard({
+    super.key,
     required this.controller,
     this.onVerProgresso,
   });
@@ -952,7 +1097,7 @@ class _FeaturedWordsStrip extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Nível ${p.boxLevel}',
+                      'Caixa ${p.boxLevel}',
                       style: GoogleFonts.lexend(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,

@@ -210,20 +210,28 @@ class PracticeSessionSummaryScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 28),
-                        ..._resultRows(theme),
                         if (onReviewQuestionTap != null &&
                             outcome.resultados.isNotEmpty) ...[
-                          const SizedBox(height: 12),
-                          Text(
-                            'Clique na questão para rever sua resposta',
-                            textAlign: TextAlign.center,
-                            style: theme.copyWith(
-                              fontSize: 12,
-                              color: AppColors.textoSuave,
-                              height: 1.3,
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.touch_app_outlined,
+                                  size: 15, color: AppColors.primaria),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Toque na questão para rever sua resposta',
+                                style: theme.copyWith(
+                                  fontSize: 13,
+                                  color: AppColors.primaria,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.3,
+                                ),
+                              ),
+                            ],
                           ),
+                          const SizedBox(height: 12),
                         ],
+                        _resultGrid(theme),
                         const SizedBox(height: 28),
                         Text(
                           'Sugestão de palavra da partida',
@@ -332,67 +340,97 @@ class PracticeSessionSummaryScreen extends StatelessWidget {
     );
   }
 
-  List<Widget> _resultRows(TextStyle theme) {
-    final list = outcome.resultados;
-    final out = <Widget>[];
-    for (var i = 0; i < list.length; i += 2) {
-      final left = _resultCell(i, list[i], theme);
-      final right = i + 1 < list.length
-          ? _resultCell(i + 1, list[i + 1], theme)
-          : const SizedBox();
-      out.add(
-        Padding(
-          padding: const EdgeInsets.only(bottom: 14),
+  Widget _resultGrid(TextStyle theme) {
+    final items = outcome.resultados;
+    if (items.isEmpty) return const SizedBox.shrink();
+    final rows = <Widget>[];
+    for (var i = 0; i < items.length; i += 2) {
+      rows.add(
+        IntrinsicHeight(
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(child: left),
-              const SizedBox(width: 16),
-              Expanded(child: right),
+              Expanded(child: _resultCell(i, items[i], theme)),
+              const SizedBox(width: 10),
+              if (i + 1 < items.length)
+                Expanded(child: _resultCell(i + 1, items[i + 1], theme))
+              else
+                const Expanded(child: SizedBox.shrink()),
             ],
           ),
         ),
       );
+      if (i + 2 < items.length) rows.add(const SizedBox(height: 10));
     }
-    return out;
+    return Column(children: rows);
   }
 
   Widget _resultCell(int index, ExerciseResultEntry r, TextStyle theme) {
     final n = index + 1;
     final label = '$n. ${_modalityLabel(r.modalidade)}';
     final ok = r.foiCorreto;
+    final acertoCor = ok ? AppColors.acerto : AppColors.erro;
+
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           label,
           style: theme.copyWith(
-            fontSize: 15,
+            fontSize: 12,
             color: AppColors.textoSuave,
             height: 1.25,
           ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 6),
-        Text(
-          ok ? 'Correta!' : 'Incorreta!',
-          style: theme.copyWith(
-            fontSize: 17,
-            fontWeight: FontWeight.bold,
-            color: ok ? AppColors.primaria : AppColors.erro,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                ok ? 'Correta!' : 'Incorreta!',
+                style: theme.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: acertoCor,
+                ),
+              ),
+            ),
+            if (onReviewQuestionTap != null)
+              Icon(Icons.chevron_right_rounded, color: acertoCor, size: 20),
+          ],
         ),
       ],
     );
+
     if (onReviewQuestionTap == null) {
-      return content;
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: acertoCor.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: acertoCor.withValues(alpha: 0.25)),
+        ),
+        child: content,
+      );
     }
+
     return Material(
-      color: Colors.transparent,
+      color: acertoCor.withValues(alpha: 0.06),
+      borderRadius: BorderRadius.circular(12),
       child: InkWell(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         onTap: () => onReviewQuestionTap!(index),
-        child: Padding(
-          padding: const EdgeInsets.all(4),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: acertoCor.withValues(alpha: 0.25)),
+          ),
           child: content,
         ),
       ),

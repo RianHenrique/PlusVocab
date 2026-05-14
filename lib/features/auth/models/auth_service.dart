@@ -191,23 +191,20 @@ class AuthService {
       if (e is DioException) {
         // Verifica se a exceção é do Dio
         if (e.response == null){
-          // debugPrint('Tipo de Erro Dio: ${e.type}');
-          // debugPrint('Mensagem: ${e.message}');
-          if (e.type == DioExceptionType.connectionTimeout) {
-            throw 'O servidor demorou demais para responder.';
+          if (e.type == DioExceptionType.connectionTimeout ||
+              e.type == DioExceptionType.receiveTimeout ||
+              e.type == DioExceptionType.sendTimeout) {
+            throw 'O servidor demorou demais para responder. Tente novamente.';
           } else {
             throw 'Não foi possível conectar ao servidor. Verifique sua internet.';
           }
         } else if (e.response?.statusCode == 401) {
-          // Se for 401 (Não autorizado)...
           throw 'E-mail não cadastrado no sistema.';
         } else {
-          // Outro erro do Dio (como 404, 500, etc.)
           String serverError = e.response?.data?['message'] ?? 'Falha na comunicação com o servidor.';
-          throw serverError; // Lança a String pura
+          throw serverError;
         }
       } else {
-        // Erro genérico
         throw Exception('Falha ao logar: $e');
       }
     }
@@ -227,23 +224,20 @@ class AuthService {
       if (e is DioException) {
         // Verifica se a exceção é do Dio
         if (e.response == null){
-          // debugPrint('Tipo de Erro Dio: ${e.type}');
-          // debugPrint('Mensagem: ${e.message}');
-          if (e.type == DioExceptionType.connectionTimeout) {
-            throw 'O servidor demorou demais para responder.';
+          if (e.type == DioExceptionType.connectionTimeout ||
+              e.type == DioExceptionType.receiveTimeout ||
+              e.type == DioExceptionType.sendTimeout) {
+            throw 'O servidor demorou demais para responder. Tente novamente.';
           } else {
             throw 'Não foi possível conectar ao servidor. Verifique sua internet.';
           }
         } else if (e.response?.statusCode == 401) {
-          // Se for 401 (Não autorizado)...
           throw 'E-mail não cadastrado no sistema.';
         } else {
-          // Outro erro do Dio (como 404, 500, etc.)
           String serverError = e.response?.data?['message'] ?? 'Falha na comunicação com o servidor.';
-          throw serverError; // Lança a String pura
+          throw serverError;
         }
       } else {
-        // Erro genérico
         throw Exception('Falha ao logar: $e');
       }
     }
@@ -263,23 +257,20 @@ class AuthService {
       if (e is DioException) {
         // Verifica se a exceção é do Dio
         if (e.response == null){
-          // debugPrint('Tipo de Erro Dio: ${e.type}');
-          // debugPrint('Mensagem: ${e.message}');
-          if (e.type == DioExceptionType.connectionTimeout) {
-            throw 'O servidor demorou demais para responder.';
+          if (e.type == DioExceptionType.connectionTimeout ||
+              e.type == DioExceptionType.receiveTimeout ||
+              e.type == DioExceptionType.sendTimeout) {
+            throw 'O servidor demorou demais para responder. Tente novamente.';
           } else {
             throw 'Não foi possível conectar ao servidor. Verifique sua internet.';
           }
         } else if (e.response?.statusCode == 401) {
-          // Se for 401 (Não autorizado)...
-          throw 'E-mail não cadastrado no sistema.';
+          throw 'Token inválido ou expirado.';
         } else {
-          // Outro erro do Dio (como 404, 500, etc.)
           String serverError = e.response?.data?['message'] ?? 'Falha na comunicação com o servidor.';
-          throw serverError; // Lança a String pura
+          throw serverError;
         }
       } else {
-        // Erro genérico
         throw Exception('Falha ao logar: $e');
       }
     }

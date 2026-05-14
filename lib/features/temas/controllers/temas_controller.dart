@@ -28,6 +28,13 @@ class TemasController extends ChangeNotifier {
 
   bool get temasListaJaCarregada => _temasEmMemoria != null;
 
+  void limparCache() {
+    _temasEmMemoria = null;
+    _errorListaTemas = null;
+    _jaSincronizouListaNaTelaDeTemas = false;
+    notifyListeners();
+  }
+
   void invalidarListaTemasEmMemoria() {
     _temasEmMemoria = null;
     _errorListaTemas = null;
@@ -137,7 +144,7 @@ class TemasController extends ChangeNotifier {
     }
   }
 
-  /// Cria o tema e inicia a sessão de prática na API (`POST /vocab/practice/start`).
+  /// Cria o tema e inicia a sessão de prática na API (`POST /vocab/practice/v2/start`).
   Future<({PracticeSessionPayload session, String themeId})?> criarTemaEIniciarPratica({
     required String nome,
     required String descricao,

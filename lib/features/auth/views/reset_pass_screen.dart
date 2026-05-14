@@ -44,6 +44,18 @@ class _ResetPassScreenState extends State<ResetPassScreen> {
       if (!mounted) return;
 
       if (authController.errorMessage == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Senha alterada com sucesso!',
+              style: GoogleFonts.lexend(color: AppColors.branco, fontSize: 13),
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        await Future.delayed(const Duration(seconds: 2));
+        if (!mounted) return;
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => const SignInScreen(),

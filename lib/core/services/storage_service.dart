@@ -18,6 +18,7 @@ class StorageService {
   static const _keyUserProfileJson = 'KEY_USER_PROFILE_JSON';
   static const _keyThemesFromLoginJson = 'KEY_THEMES_FROM_LOGIN_JSON';
   static const _keyMostrarProximasPalavras = 'KEY_MOSTRAR_PROXIMAS_PALAVRAS';
+  static const _keyHomeTourSeen = 'KEY_HOME_TOUR_SEEN';
 
   // --- SALVAR DADOS ---
   Future<void> saveAuthData({
@@ -85,6 +86,19 @@ class StorageService {
     return v == 'true';
   }
 
+  Future<void> setHomeTourSeen() async {
+    await _storage.write(key: _keyHomeTourSeen, value: 'true');
+  }
+
+  Future<bool> hasSeenHomeTour() async {
+    final v = await _storage.read(key: _keyHomeTourSeen);
+    return v == 'true';
+  }
+
+  Future<void> clearHomeTourSeen() async {
+    await _storage.delete(key: _keyHomeTourSeen);
+  }
+
   static List<Map<String, dynamic>> decodeThemesFromLoginJson(String? raw) {
     if (raw == null || raw.isEmpty) return [];
     try {
@@ -106,6 +120,13 @@ class StorageService {
 
   // --- LIMPAR DADOS (LOGOUT) ---
   Future<void> clearAuthData() async {
-    await _storage.deleteAll();
+    // Apaga apenas dados de autenticação; mantém preferências de dispositivo como o flag do tour.
+    await _storage.delete(key: _keyAccessToken);
+    await _storage.delete(key: _keyRefreshToken);
+    await _storage.delete(key: _keyUserId);
+    await _storage.delete(key: _keyUserEmail);
+    await _storage.delete(key: _keyUserProfileJson);
+    await _storage.delete(key: _keyThemesFromLoginJson);
+    await _storage.delete(key: _keyMostrarProximasPalavras);
   }
 }

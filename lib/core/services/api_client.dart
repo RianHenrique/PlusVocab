@@ -11,8 +11,9 @@ class ApiClient {
       : dio = Dio(
           BaseOptions(
             baseUrl: 'https://plusvocab-api.onrender.com/api',
-            connectTimeout: const Duration(seconds: 5),
-            // Você pode configurar headers padrões, interceptors, etc. TUDO AQUI
+            connectTimeout: const Duration(seconds: 15),
+            receiveTimeout: const Duration(seconds: 30),
+            sendTimeout: const Duration(seconds: 15),
           ),
         );
   

@@ -10,7 +10,7 @@ class VocabPracticeService {
   Future<PracticeSessionPayload> iniciarSessao({required String themeId}) async {
     try {
       final response = await _apiClient.post(
-        '/vocab/practice/start',
+        '/vocab/practice/v2/start',
         data: {'themeId': themeId},
         options: Options(
           receiveTimeout: const Duration(seconds: 120),

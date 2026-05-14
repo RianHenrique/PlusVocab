@@ -119,13 +119,6 @@ class _RankingWeekScreenState extends State<RankingWeekScreen> {
     }
   }
 
-  RankingWeekEntry? _entryAt(int position) {
-    final list = _data?.ranking ?? [];
-    for (final e in list) {
-      if (e.position == position) return e;
-    }
-    return null;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -206,7 +199,6 @@ class _RankingWeekScreenState extends State<RankingWeekScreen> {
                                           const SizedBox(height: 12),
                                           _RankingBody(
                                             data: _data!,
-                                            entryAt: _entryAt,
                                           ),
                                         ],
                                       ),
@@ -403,11 +395,9 @@ class _ErrorState extends StatelessWidget {
 class _RankingBody extends StatelessWidget {
   const _RankingBody({
     required this.data,
-    required this.entryAt,
   });
 
   final RankingWeekResponse data;
-  final RankingWeekEntry? Function(int position) entryAt;
 
   bool _isCurrentUser(RankingWeekEntry e) {
     final u = data.user;
@@ -426,16 +416,9 @@ class _RankingBody extends StatelessWidget {
       children: [
         const _RankingResetCountdown(),
         const SizedBox(height: 20),
-        if (ranking.length >= 3) ...[
-          _WeekPodium(
-            second: entryAt(2),
-            first: entryAt(1),
-            third: entryAt(3),
-            isCurrentUser: _isCurrentUser,
-          ),
-        ] else if (ranking.isNotEmpty) ...[
+        if (ranking.isNotEmpty) ...[
           Text(
-            'Top desta semana',
+            'Classificação da semana',
             style: GoogleFonts.lexend(
               fontSize: 15,
               fontWeight: FontWeight.w700,
@@ -447,21 +430,6 @@ class _RankingBody extends StatelessWidget {
         ] else ...[
           const SizedBox(height: 8),
           _EmptyRanking(),
-        ],
-        if (ranking.length > 3) ...[
-          const SizedBox(height: 20),
-          Text(
-            'Demais colocados',
-            style: GoogleFonts.lexend(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textoAzul,
-            ),
-          ),
-          const SizedBox(height: 10),
-          ...ranking.where((e) => e.position > 3).map(
-                (e) => _RankingRowTile(entry: e, highlight: _isCurrentUser(e)),
-              ),
         ],
         if (hasUser) ...[
           const SizedBox(height: 24),
@@ -555,182 +523,6 @@ class _UserPositionCard extends StatelessWidget {
                 ),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _WeekPodium extends StatelessWidget {
-  const _WeekPodium({
-    required this.second,
-    required this.first,
-    required this.third,
-    required this.isCurrentUser,
-  });
-
-  final RankingWeekEntry? second;
-  final RankingWeekEntry? first;
-  final RankingWeekEntry? third;
-  final bool Function(RankingWeekEntry e) isCurrentUser;
-
-  static Color _accentForRank(int rank) {
-    switch (rank) {
-      case 1:
-        return AppColors.primaria;
-      case 2:
-        return AppColors.primaria.withValues(alpha: 0.55);
-      default:
-        return AppColors.primaria.withValues(alpha: 0.35);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          'Pódio da semana',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.lexend(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textoAzul,
-          ),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 200,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: _PodiumPlace(
-                  entry: second,
-                  rank: 2,
-                  accent: _accentForRank(2),
-                  maxHeight: 120,
-                  isCurrentUser: isCurrentUser,
-                ),
-              ),
-              Expanded(
-                flex: 11,
-                child: _PodiumPlace(
-                  entry: first,
-                  rank: 1,
-                  accent: _accentForRank(1),
-                  maxHeight: 150,
-                  isCurrentUser: isCurrentUser,
-                ),
-              ),
-              Expanded(
-                child: _PodiumPlace(
-                  entry: third,
-                  rank: 3,
-                  accent: _accentForRank(3),
-                  maxHeight: 100,
-                  isCurrentUser: isCurrentUser,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 6),
-        Container(
-          height: 12,
-          decoration: BoxDecoration(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-            color: AppColors.primaria.withValues(alpha: 0.2),
-            border: Border.all(color: AppColors.bordaCampo),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _PodiumPlace extends StatelessWidget {
-  const _PodiumPlace({
-    required this.entry,
-    required this.rank,
-    required this.accent,
-    required this.maxHeight,
-    required this.isCurrentUser,
-  });
-
-  final RankingWeekEntry? entry;
-  final int rank;
-  final Color accent;
-  final double maxHeight;
-  final bool Function(RankingWeekEntry e) isCurrentUser;
-
-  @override
-  Widget build(BuildContext context) {
-    final name = entry?.name ?? '—';
-    final practices = entry?.totalPracticesWeek ?? 0;
-    final e = entry;
-    final highlight = e != null && isCurrentUser(e);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Icon(
-            rank == 1 ? Icons.emoji_events_outlined : Icons.military_tech_outlined,
-            color: AppColors.primaria,
-            size: rank == 1 ? 32 : 24,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.lexend(
-              fontSize: rank == 1 ? 13 : 12,
-              fontWeight: FontWeight.w700,
-              color: highlight ? AppColors.primaria : AppColors.textoAzul,
-            ),
-          ),
-          Text(
-            '$practices prát.',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.lexend(fontSize: 10, color: AppColors.textoSecundario),
-          ),
-          const SizedBox(height: 8),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeOutCubic,
-            height: maxHeight,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  accent.withValues(alpha: 0.25),
-                  accent.withValues(alpha: 0.75),
-                ],
-              ),
-              border: Border.all(
-                color: highlight ? AppColors.primaria : AppColors.bordaCampo,
-                width: highlight ? 2 : 1,
-              ),
-            ),
-            child: Center(
-              child: Text(
-                '$rank',
-                style: GoogleFonts.lexend(
-                  fontSize: rank == 1 ? 40 : 30,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.branco,
-                ),
-              ),
-            ),
           ),
         ],
       ),

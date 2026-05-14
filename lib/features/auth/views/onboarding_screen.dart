@@ -7,7 +7,10 @@ import 'package:plus_vocab/core/services/storage_service.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/features/auth/controllers/auth_controller.dart';
 import 'package:plus_vocab/features/auth/views/signin_screen.dart';
-import 'package:plus_vocab/features/home/views/home_screen.dart';
+import 'package:plus_vocab/features/dicionario/controllers/dicionario_controller.dart';
+import 'package:plus_vocab/features/home/controllers/progress_home_controller.dart';
+import 'package:plus_vocab/features/temas/controllers/temas_controller.dart';
+import 'package:plus_vocab/features/tour/sistema_caixas_screen.dart';
 import 'package:plus_vocab/features/user/models/user_service.dart';
 
 const List<(String apiValue, String labelPt)> _fluencyChoices = [
@@ -120,7 +123,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       await storage.setMostrarProximasPalavras(_mostrarProximasPalavras);
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(builder: (_) => const SistemaCaixasScreen()),
         (route) => false,
       );
     } catch (e) {
@@ -140,6 +143,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (_submitting) return;
     setState(() => _submitting = true);
     try {
+      context.read<TemasController>().limparCache();
+      context.read<DicionarioController>().limparCache();
+      context.read<ProgressHomeController>().limparCache();
       await context.read<AuthController>().logOut();
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(

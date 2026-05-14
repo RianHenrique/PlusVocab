@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
+import 'package:plus_vocab/features/dicionario/controllers/dicionario_controller.dart';
 import 'package:plus_vocab/features/pratica/exercicio/data/vocab_practice_service.dart';
 import 'package:plus_vocab/features/pratica/exercicio/views/practice_session_screen.dart';
 import 'package:provider/provider.dart';
 
-/// Tela exibida ao iniciar uma prática: chama `POST /vocab/practice/start` e abre a sessão.
+/// Tela exibida ao iniciar uma prática: chama `POST /vocab/practice/v2/start` e abre a sessão.
 class PracticeSessionLoadingScreen extends StatefulWidget {
   const PracticeSessionLoadingScreen({
     super.key,
@@ -29,25 +30,44 @@ class _PracticeSessionLoadingScreenState extends State<PracticeSessionLoadingScr
   int _phraseIndex = 0;
   Timer? _phraseTimer;
 
-  static final List<String> _phrases = [
-    'Você sabia que revisar vocabulário em contexto ajuda a fixar melhor o significado das palavras?',
-    'Você atualmente tem dificuldade nas palavras: itinerário, provisioning, embarque. '
-        '(Em breve virá do seu progresso no app.)',
-    'Você recentemente acertou as palavras: "reserva", "cardápio" e "gorjeta". '
-        '(Dados de exemplo até integrarmos o endpoint de progresso.)',
-    'Enquanto isso, respire fundo: uma partida curta e focada vale mais que uma sessão longa e cansada.',
-  ];
+  late List<String> _phrases;
 
   @override
   void initState() {
     super.initState();
+    _phrases = [
+      'Você sabia que revisar vocabulário em contexto ajuda a fixar melhor o significado das palavras?',
+      'Enquanto espera, lembre-se: consistência diária supera uma sessão longa e irregular.',
+      'Nossa IA está elaborando exercícios personalizados com base no seu tema.',
+    ];
     _phraseTimer = Timer.periodic(_phraseInterval, (_) {
       if (!mounted) return;
       setState(() {
         _phraseIndex = (_phraseIndex + 1) % _phrases.length;
       });
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) => _carregarSessao());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _carregarSessao();
+      _injetarFraseDicionario();
+    });
+  }
+
+  Future<void> _injetarFraseDicionario() async {
+    final ctrl = context.read<DicionarioController>();
+    await ctrl.carregarSeNecessario();
+    if (!mounted) return;
+
+    final ativas = ctrl.palavras.where((p) => p.active).toList();
+    if (ativas.isEmpty) return;
+
+    ativas.sort((a, b) => a.boxLevel.compareTo(b.boxLevel));
+    final dificeis = ativas.take(3).map((p) => p.word.text).toList();
+    final listagem = dificeis.map((w) => '"$w"').join(', ');
+
+    setState(() {
+      _phrases = List<String>.from(_phrases)
+        ..insert(1, 'Palavras do seu dicionário que precisam de atenção: $listagem.');
+    });
   }
 
   Future<void> _carregarSessao() async {

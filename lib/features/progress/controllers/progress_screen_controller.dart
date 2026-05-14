@@ -47,6 +47,7 @@ class ProgressScreenController extends ChangeNotifier {
 
   List<ModalityOption> _modalityOptions = const [];
   List<ThemeOption> _themeOptions = const [];
+  Set<String> _visibleThemeIds = const {};
 
   ProgressOverview? get overview => _overview;
   String? get initialError => _initialError;
@@ -72,6 +73,7 @@ class ProgressScreenController extends ChangeNotifier {
 
   List<ModalityOption> get modalityOptions => _modalityOptions;
   List<ThemeOption> get themeOptions => _themeOptions;
+  Set<String> get visibleThemeIds => _visibleThemeIds;
 
   int _selectedBoxNumber = 1;
 
@@ -229,7 +231,20 @@ class ProgressScreenController extends ChangeNotifier {
     );
     _themesChartMonth = next;
     _selectedThemeId = null;
+    _visibleThemeIds = const {};
     await _reloadThemes();
+  }
+
+  void toggleThemeVisibility(String id) {
+    final copy = Set<String>.from(_visibleThemeIds);
+    if (copy.contains(id)) {
+      if (copy.length <= 1) return;
+      copy.remove(id);
+    } else {
+      copy.add(id);
+    }
+    _visibleThemeIds = copy;
+    notifyListeners();
   }
 
   Future<void> setModalityFilter(int? modalityId) async {
@@ -340,6 +355,9 @@ class ProgressScreenController extends ChangeNotifier {
           ),
         )
         .toList();
+    if (_visibleThemeIds.isEmpty && sortedKeys.isNotEmpty) {
+      _visibleThemeIds = sortedKeys.take(5).toSet();
+    }
   }
 
   String _humanizeModalityName(String raw) {

@@ -12,6 +12,7 @@ class FillInTheBlanksPracticeBody extends StatelessWidget {
     required this.onAnswerChanged,
     required this.fieldBorderColor,
     this.readOnly = false,
+    this.wordOptions = const [],
   });
 
   final String textBeforeBlank;
@@ -21,6 +22,9 @@ class FillInTheBlanksPracticeBody extends StatelessWidget {
   final VoidCallback onAnswerChanged;
   final Color fieldBorderColor;
   final bool readOnly;
+
+  /// Opções de escrita do backend; quando não vazias aparecem como chips informativos acima do campo.
+  final List<String> wordOptions;
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +61,40 @@ class FillInTheBlanksPracticeBody extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 18),
+          if (wordOptions.isNotEmpty && !readOnly) ...[
+            Text(
+              'Opções:',
+              style: GoogleFonts.lexend(
+                fontSize: 13,
+                color: AppColors.textoSuave,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: wordOptions.map((option) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.branco,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.bordaCampo),
+                  ),
+                  child: Text(
+                    option,
+                    style: GoogleFonts.lexend(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textoPreto,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 14),
+          ],
           TextField(
             controller: answerController,
             readOnly: readOnly,

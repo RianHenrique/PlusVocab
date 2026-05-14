@@ -221,55 +221,43 @@ class AuthController extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    await _deepClean();
-
-    // 1. Inicializa a configuração (scopings podem ser adicionados se necessário)
-    GoogleSignIn googleSignIn = GoogleSignIn(
+    final GoogleSignIn googleSignIn = GoogleSignIn(
       serverClientId: "513254980783-0mc882kqo0rdkhtc1qbr4fi3aal8h01o.apps.googleusercontent.com",
       scopes: ['email', 'profile'],
     );
 
     try {
-      // await googleSignIn.disconnect();
-      // 2. Inicia o processo de login (abre a folha de seleção de conta)
+      await googleSignIn.signOut();
+
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
-      if (googleUser != null) {
-        // 3. Obtém os detalhes da autenticação
-        // final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-        final String? serverAuthCode = googleUser.serverAuthCode;
+      if (googleUser == null) return;
 
-        // 4. Aqui estão os tokens que você precisa
-        // String? accessToken = googleAuth.accessToken;
-        // String? idToken = googleAuth.idToken;
+      final String? serverAuthCode = googleUser.serverAuthCode;
 
-        // debugPrint("Access Token: $accessToken");
-        // debugPrint("ID Token: $idToken");
+      if (serverAuthCode != null) {
+        await _authService.storage.clearAuthData();
+        _currentUser = null;
+        _userProfile = null;
+        _themesFromLogin = [];
 
-        if (serverAuthCode != null){
-          final session = await _authService.authGoogle(serverAuthCode: serverAuthCode);
-          _applySession(session);
-          debugPrint('Usuário logado com sucesso: $_currentUser');
-        } else {
-          debugPrint("Erro: serverAuthCode veio nulo. Verifique o serverClientId.");
-        }
-
-        // _currentUser = User(
-        //   id: googleUser.id,
-        //   email: googleUser.email,
-        //   accessToken: accessToken!,
-        //   refreshToken: idToken!,
-        // );
-        
-        // Agora você pode enviar esse idToken para o seu backend para validação
-      }
-      if (googleUser == null) {
-        return;
+        final session = await _authService.authGoogle(serverAuthCode: serverAuthCode);
+        _applySession(session);
+        debugPrint('Usuário logado com sucesso via Google: $_currentUser');
+      } else {
+        _errorMessage = 'Não foi possível obter as credenciais do Google. Tente novamente.';
       }
     } catch (e) {
-      _errorMessage = e.toString();
-    }
-    finally {
+      final msg = e.toString();
+      if (msg.contains('ApiException: 10') || msg.contains('sign_in_failed')) {
+        _errorMessage = 'Falha ao entrar com Google. Verifique sua conexão e tente novamente.';
+      } else if (msg.contains('network_error') || msg.contains('NetworkError')) {
+        _errorMessage = 'Sem conexão com a internet. Verifique sua rede.';
+      } else {
+        _errorMessage = 'Erro ao entrar com Google. Tente novamente.';
+      }
+      debugPrint('Erro no Google Sign-In: $msg');
+    } finally {
       _isLoading = false;
       notifyListeners();
     }
@@ -310,36 +298,4 @@ class AuthController extends ChangeNotifier {
 
   }
 
-  // No seu AuthController
-  Future<void> _deepClean() async {
-    try {
-      // 1. PRIMEIRO: Limpa o storage. 
-      // Assim, o Interceptor não terá 'accessToken' para anexar a nenhuma chamada.
-      await _authService.storage.clearAuthData();
-      
-      _currentUser = null;
-      _userProfile = null;
-      _themesFromLogin = [];
-      _errorMessage = null;
-      notifyListeners();
-
-      // 2. DEPOIS: Limpa o Google
-      final GoogleSignIn googleSignIn = GoogleSignIn(
-        serverClientId: "513254980783-0mc882kqo0rdkhtc1qbr4fi3aal8h01o.apps.googleusercontent.com",
-      );
-
-      // SignOut é local, raramente dá erro.
-      await googleSignIn.signOut();
-
-      // Disconnect pode tentar ir na rede. 
-      // Como o storage já foi limpo acima, o Interceptor irá sem token (o que é correto).
-      try {
-        await googleSignIn.disconnect();
-      } catch (e) {
-        debugPrint("Google disconnect ignorado: $e");
-      }
-    } catch (e) {
-      debugPrint("Erro na limpeza profunda: $e");
-    }
-  }
 }

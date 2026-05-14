@@ -23,6 +23,12 @@ class DicionarioController extends ChangeNotifier {
   List<PalavraModel> get palavras =>
       List<PalavraModel>.unmodifiable(_palavras ?? const []);
 
+  void limparCache() {
+    _palavras = null;
+    _errorLista = null;
+    notifyListeners();
+  }
+
   Future<void> carregarSeNecessario() async {
     if (_palavras != null) return;
     await forcarAtualizacao();

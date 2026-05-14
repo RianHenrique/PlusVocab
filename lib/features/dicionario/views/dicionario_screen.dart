@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/features/dicionario/controllers/dicionario_controller.dart';
 import 'package:plus_vocab/features/dicionario/models/palavra_model.dart';
+import 'package:plus_vocab/features/tour/sistema_caixas_screen.dart';
 import 'package:provider/provider.dart';
 import 'palavra_info_modal.dart';
 
@@ -18,7 +19,7 @@ class _DicionarioScreenState extends State<DicionarioScreen> {
   String _searchQuery = '';
   String _ordenacao = 'alfabética';
 
-  static const _opcoesOrdenacao = ['alfabética', 'mais recentes', 'maior nível', 'menor nível'];
+  static const _opcoesOrdenacao = ['alfabética', 'mais recentes', 'maior caixa', 'menor caixa'];
 
   @override
   void initState() {
@@ -47,9 +48,9 @@ class _DicionarioScreenState extends State<DicionarioScreen> {
         lista.sort((a, b) => a.word.text.toLowerCase().compareTo(b.word.text.toLowerCase()));
       case 'mais recentes':
         lista.sort((a, b) => (b.lastSeenAt ?? '').compareTo(a.lastSeenAt ?? ''));
-      case 'maior nível':
+      case 'maior caixa':
         lista.sort((a, b) => b.boxLevel.compareTo(a.boxLevel));
-      case 'menor nível':
+      case 'menor caixa':
         lista.sort((a, b) => a.boxLevel.compareTo(b.boxLevel));
     }
 
@@ -222,14 +223,33 @@ class _DicionarioScreenState extends State<DicionarioScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconButton(
-            icon: const Icon(Icons.chevron_left, size: 28),
-            color: AppColors.textoPreto,
-            onPressed: () => Navigator.of(context).maybePop(),
-            padding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
-            style: IconButton.styleFrom(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left, size: 28),
+                color: AppColors.textoPreto,
+                onPressed: () => Navigator.of(context).maybePop(),
+                padding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+                style: IconButton.styleFrom(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              ),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.help_outline_rounded, size: 24),
+                color: AppColors.primaria,
+                tooltip: 'Como funciona a repetição espaçada',
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const SistemaCaixasScreen(fromOnboarding: false),
+                  ),
+                ),
+                padding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+                style: IconButton.styleFrom(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           Text(

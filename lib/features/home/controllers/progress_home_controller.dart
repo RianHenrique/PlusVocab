@@ -15,6 +15,12 @@ class ProgressHomeController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
+  void limparCache() {
+    _data = null;
+    _errorMessage = null;
+    notifyListeners();
+  }
+
   Future<void> carregar() async {
     _isLoading = true;
     _errorMessage = null;

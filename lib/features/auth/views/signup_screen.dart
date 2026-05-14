@@ -155,33 +155,45 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             decoration: InputDecoration(
                               labelText: "Senha",
                               labelStyle: GoogleFonts.lexend(fontSize: 12, fontWeight: FontWeight.w300),
+                              helperText: 'Mín. 6 caracteres, com maiúscula, minúscula e número',
+                              helperMaxLines: 2,
+                              helperStyle: GoogleFonts.lexend(fontSize: 10, color: AppColors.textoHint),
                               suffixIcon: IconButton(
                                 onPressed: (){
                                   setState(() {
                                     _isPasswordVisible = !_isPasswordVisible;
                                   });
-                                }, 
+                                },
                                 icon: Icon(
-                                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off, 
+                                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
                                   color: AppColors.textoHint
                                 ),
                                 iconSize: 18,
                               )
                             ),
-                            validator: (value) { // Sua validação
+                            validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Por favor, digite uma senha';
                               }
-                              if (value.length < 8) {
+                              if (value.length < 6) {
                                 return 'A senha deve ter pelo menos 6 caracteres';
+                              }
+                              if (!value.contains(RegExp(r'[A-Z]'))) {
+                                return 'A senha deve conter ao menos uma letra maiúscula';
+                              }
+                              if (!value.contains(RegExp(r'[a-z]'))) {
+                                return 'A senha deve conter ao menos uma letra minúscula';
+                              }
+                              if (!value.contains(RegExp(r'[0-9]'))) {
+                                return 'A senha deve conter ao menos um número';
                               }
                               return null;
                             },
-                          ),                         
+                          ),
                           const SizedBox(height: 5,),
                           TextFormField(
                             controller: _confirmPasswordController,
-                            obscureText: !_isPasswordVisible,
+                            obscureText: !_isConfirmPasswordVisible,
                             style: GoogleFonts.lexend(fontSize: 14),
                             decoration: InputDecoration(
                               labelText: "Confirme a sua senha",

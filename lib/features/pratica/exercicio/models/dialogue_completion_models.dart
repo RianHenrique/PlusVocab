@@ -90,6 +90,8 @@ abstract final class DialogueCompletionEvaluation {
   }
 
   /// Retorna true se a transcrição bate com alguma entrada do gabarito após normalização.
+  /// Critério: match exato, ou transcrição contém o gabarito, ou ≥90% das palavras do
+  /// gabarito estão na transcrição (e o usuário falou pelo menos metade das palavras esperadas).
   static bool matchesTranscript({
     required String userTranscript,
     required List<String> acceptedAnswers,
@@ -99,10 +101,21 @@ abstract final class DialogueCompletionEvaluation {
     for (final raw in acceptedAnswers) {
       final a = normalize(raw);
       if (a.isEmpty) continue;
-      if (u == a || u.contains(a) || a.contains(u)) {
-        return true;
-      }
+      if (u == a || u.contains(a)) return true;
+      if (_wordCoverageScore(u, a) >= 0.9) return true;
     }
     return false;
+  }
+
+  /// Fração das palavras do gabarito [answerNorm] presentes em [userNorm].
+  /// Retorna 0 se o usuário falou menos que 50% do número de palavras esperado.
+  static double _wordCoverageScore(String userNorm, String answerNorm) {
+    final uWords = userNorm.split(' ').where((w) => w.isNotEmpty).toList();
+    final aWords = answerNorm.split(' ').where((w) => w.isNotEmpty).toList();
+    if (aWords.isEmpty) return 0;
+    if (uWords.length < aWords.length * 0.5) return 0;
+    final uSet = uWords.toSet();
+    final covered = aWords.where((w) => uSet.contains(w)).length;
+    return covered / aWords.length;
   }
 }

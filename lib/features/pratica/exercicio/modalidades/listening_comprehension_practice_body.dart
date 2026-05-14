@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
 
+const _kSpeedLabels = ['Devagar', 'Normal', 'Rápido'];
+
 class ListeningComprehensionPracticeBody extends StatelessWidget {
   const ListeningComprehensionPracticeBody({
     super.key,
@@ -15,6 +17,8 @@ class ListeningComprehensionPracticeBody extends StatelessWidget {
     this.correctOptionIndex,
     this.submittedOptionIndex,
     this.isInteractionEnabled = true,
+    this.speedIndex = 1,
+    this.onSpeedChanged,
   });
 
   final VoidCallback onPlayListening;
@@ -27,6 +31,10 @@ class ListeningComprehensionPracticeBody extends StatelessWidget {
   final int? correctOptionIndex;
   final int? submittedOptionIndex;
   final bool isInteractionEnabled;
+
+  /// Índice da velocidade de reprodução: 0 = devagar, 1 = normal, 2 = rápido.
+  final int speedIndex;
+  final ValueChanged<int>? onSpeedChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +88,49 @@ class ListeningComprehensionPracticeBody extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
+          // Seletor de velocidade
+          if (onSpeedChanged != null) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(_kSpeedLabels.length, (i) {
+                final active = speedIndex == i;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: GestureDetector(
+                    onTap: () => onSpeedChanged!(i),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 120),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color:
+                            active ? AppColors.primaria : Colors.transparent,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: active
+                              ? AppColors.primaria
+                              : AppColors.bordaCampo,
+                        ),
+                      ),
+                      child: Text(
+                        _kSpeedLabels[i],
+                        style: GoogleFonts.lexend(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: active
+                              ? AppColors.branco
+                              : AppColors.textoSuave,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
+            const SizedBox(height: 16),
+          ] else
+            const SizedBox(height: 16),
           Text(
             questionText,
             textAlign: TextAlign.center,

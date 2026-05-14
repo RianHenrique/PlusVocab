@@ -1,10 +1,11 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/features/progress/controllers/progress_screen_controller.dart';
 import 'package:plus_vocab/features/progress/progress_chart_palette.dart';
 import 'package:plus_vocab/features/progress/models/progress_overview_models.dart';
+import 'package:plus_vocab/features/progress/models/progress_themes_models.dart';
+import 'package:plus_vocab/features/progress/views/practice_history_screen.dart';
 import 'package:plus_vocab/features/progress/views/progress_formatters.dart';
 import 'package:plus_vocab/features/progress/widgets/progress_bar_charts.dart';
 import 'package:provider/provider.dart';
@@ -81,7 +82,33 @@ class MyProgressScreen extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              _GeneralMetricsCard(summary: overview.summary),
+                              _MetricsCarousel(summary: overview.summary),
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
+                                  onPressed: () => Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) =>
+                                          const PracticeHistoryScreen(),
+                                    ),
+                                  ),
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: Text(
+                                    'Visualizar histórico →',
+                                    style: GoogleFonts.lexend(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.primaria,
+                                    ),
+                                  ),
+                                ),
+                              ),
                               const SizedBox(height: 18),
                               _WeeklyCard(controller: controller),
                               const SizedBox(height: 18),
@@ -212,167 +239,190 @@ class _CardShell extends StatelessWidget {
   }
 }
 
-class _GeneralMetricsCard extends StatelessWidget {
-  const _GeneralMetricsCard({required this.summary});
+class _MetricsCarousel extends StatefulWidget {
+  const _MetricsCarousel({required this.summary});
 
   final ProgressSummary summary;
 
   @override
+  State<_MetricsCarousel> createState() => _MetricsCarouselState();
+}
+
+class _MetricsCarouselState extends State<_MetricsCarousel> {
+  final _pageController = PageController();
+  int _currentPage = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final accPct = (summary.accuracy * 100).round();
-    return _CardShell(
-      title: 'Métricas gerais',
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+    final s = widget.summary;
+    final accPct = (s.accuracy * 100).round();
+
+    final pages = [
+      _MetricPairCard(
+        leftValue: '${s.activeDays}',
+        leftLabel: 'dias ativos',
+        rightValue: '${s.userStreak}',
+        rightLabel: 'dias seguidos',
+      ),
+      _MetricPairCard(
+        leftValue: '${s.totalPractices}',
+        leftLabel: 'práticas',
+        rightValue: '$accPct%',
+        rightLabel: 'acerto médio geral',
+      ),
+      _MetricPairCard(
+        leftValue: '${s.wordsMastered}',
+        leftLabel: 'palavras dominadas',
+        rightValue: '${s.wordsSeen}',
+        rightLabel: 'palavras vistas',
+      ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Expanded(
-              flex: 7,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    '${summary.activeDays}',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.lexend(
-                      fontSize: 36,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primaria,
-                      height: 1,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'dias ativos',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.lexend(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: _metricLabelBlue,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    '${summary.totalPractices}',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.lexend(
-                      fontSize: 36,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primaria,
-                      height: 1,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'práticas',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.lexend(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: _metricLabelBlue,
-                    ),
-                  ),
-                ],
+            Text(
+              'Métricas gerais',
+              style: GoogleFonts.lexend(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textoAzul,
               ),
             ),
-            VerticalDivider(
-              width: 21,
-              thickness: 1,
-              color: AppColors.linhaDivisoria,
-              indent: 4,
-              endIndent: 4,
-            ),
-            Expanded(
-              flex: 13,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Wrap(
-                    alignment: WrapAlignment.center,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: [
-                      Text(
-                        '$accPct%',
-                        style: GoogleFonts.lexend(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primaria,
-                        ),
-                      ),
-                      Text(
-                        'acerto médio geral',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.lexend(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: _metricLabelBlue,
-                          height: 1.2,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Text(
-                        '${summary.wordsMastered}',
-                        style: GoogleFonts.lexend(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primaria,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'palavras dominadas',
-                          style: GoogleFonts.lexend(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: _metricLabelBlue,
-                            height: 1.2,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Text(
-                        '${summary.wordsSeen}',
-                        style: GoogleFonts.lexend(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primaria,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'palavras vistas',
-                          style: GoogleFonts.lexend(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: _metricLabelBlue,
-                            height: 1.2,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+            Row(
+              children: List.generate(
+                pages.length,
+                (i) => _DotIndicator(active: i == _currentPage),
               ),
             ),
           ],
         ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 120,
+          child: PageView.builder(
+            controller: _pageController,
+            itemCount: pages.length,
+            onPageChanged: (i) => setState(() => _currentPage = i),
+            itemBuilder: (_, i) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: pages[i],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MetricPairCard extends StatelessWidget {
+  const _MetricPairCard({
+    required this.leftValue,
+    required this.leftLabel,
+    required this.rightValue,
+    required this.rightLabel,
+  });
+
+  final String leftValue;
+  final String leftLabel;
+  final String rightValue;
+  final String rightLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        color: AppColors.branco,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.bordaCampo),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.sombraCard,
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(child: _MetricCell(value: leftValue, label: leftLabel)),
+          VerticalDivider(
+            width: 21,
+            thickness: 1,
+            color: AppColors.linhaDivisoria,
+            indent: 4,
+            endIndent: 4,
+          ),
+          Expanded(child: _MetricCell(value: rightValue, label: rightLabel)),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetricCell extends StatelessWidget {
+  const _MetricCell({required this.value, required this.label});
+
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          value,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.lexend(
+            fontSize: 34,
+            fontWeight: FontWeight.w800,
+            color: AppColors.primaria,
+            height: 1,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          style: GoogleFonts.lexend(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: _metricLabelBlue,
+            height: 1.2,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DotIndicator extends StatelessWidget {
+  const _DotIndicator({required this.active});
+
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      margin: const EdgeInsets.only(left: 4),
+      width: active ? 12 : 6,
+      height: 6,
+      decoration: BoxDecoration(
+        color: active ? AppColors.primaria : AppColors.bordaCampo,
+        borderRadius: BorderRadius.circular(3),
       ),
     );
   }
@@ -383,21 +433,21 @@ class _BoxesCard extends StatelessWidget {
 
   final ProgressScreenController controller;
 
-  static const String _niveisHelpBody =
-      'O PlusVocab usa níveis de 1 a 5 para acompanhar o domínio de cada palavra ao longo das práticas. '
-      'Conforme você acerta e revisita o vocabulário, a palavra avança de nível. '
-      'Este gráfico mostra quantas palavras estão em cada nível; use o menu para listar as palavras de um nível específico.';
+  static const String _caixasHelpBody =
+      'O PlusVocab usa caixas de 1 a 5 para acompanhar o domínio de cada palavra ao longo das práticas. '
+      'Conforme você acerta e revisita o vocabulário, a palavra avança de caixa. '
+      'Clique em uma caixa para ver as palavras que estão nela.';
 
-  void _showNiveisHelp(BuildContext context) {
+  void _showCaixasHelp(BuildContext context) {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(
-          'O que são os níveis?',
+          'O que são as caixas?',
           style: GoogleFonts.lexend(fontWeight: FontWeight.w700, color: AppColors.textoAzul),
         ),
         content: Text(
-          _niveisHelpBody,
+          _caixasHelpBody,
           style: GoogleFonts.lexend(fontSize: 14, height: 1.35, color: AppColors.textoPreto),
         ),
         actions: [
@@ -413,79 +463,24 @@ class _BoxesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final boxes = controller.overview?.boxes ?? const <ProgressBoxRow>[];
-    final totalWords = boxes.fold<int>(0, (a, b) => a + b.count);
     return _CardShell(
-      title: 'Níveis',
+      title: 'Caixas',
       titleTrailing: IconButton(
-        onPressed: () => _showNiveisHelp(context),
+        onPressed: () => _showCaixasHelp(context),
         icon: const Icon(Icons.help_outline_rounded, color: AppColors.textoAzul, size: 20),
         visualDensity: VisualDensity.compact,
         padding: const EdgeInsets.only(left: 2),
         constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-        tooltip: 'Sobre os níveis',
+        tooltip: 'Sobre as caixas',
       ),
-      contentPadding: const EdgeInsets.fromLTRB(16, 22, 16, 24),
+      contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 10,),
-          Center(
-            child: SizedBox(
-              width: 160,
-              height: 160,
-              child: totalWords == 0
-                  ? Center(
-                      child: Text(
-                        'Sem dados',
-                        style: GoogleFonts.lexend(fontSize: 13, color: AppColors.textoSecundario),
-                      ),
-                    )
-                  : PieChart(
-                      PieChartData(
-                        sectionsSpace: 1,
-                        centerSpaceRadius: 38,
-                        sections: _pieSections(boxes),
-                      ),
-                    ),
-            ),
-          ),
-          if (totalWords > 0) ...[
-            const SizedBox(height: 20),
-            ProgressBarCharts.coloredLegendStrip(items: _pieLegendEntries(boxes)),
-          ],
-          const SizedBox(height: 18),
-          DropdownButtonFormField<int>(
-            value: controller.selectedBoxNumber,
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: AppColors.bordaCampo),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: AppColors.bordaCampo),
-              ),
-            ),
-            items: List.generate(5, (i) {
-              final n = i + 1;
-              return DropdownMenuItem(
-                value: n,
-                child: Text(
-                  'Nível $n',
-                  style: GoogleFonts.lexend(fontSize: 14, color: AppColors.textoPreto),
-                ),
-              );
-            }),
-            onChanged: (v) {
-              if (v != null) {
-                controller.selectedBoxNumber = v;
-              }
-            },
-          ),
-          const SizedBox(height: 10),
+          _buildBoxTiles(boxes),
+          const SizedBox(height: 16),
           Text(
-            '${controller.selectedBoxRow?.count ?? 0} palavra(s)',
+            '${controller.selectedBoxRow?.count ?? 0} palavra(s) na Caixa ${controller.selectedBoxNumber}',
             style: GoogleFonts.lexend(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -499,37 +494,65 @@ class _BoxesCard extends StatelessWidget {
     );
   }
 
-  List<({String label, Color color})> _pieLegendEntries(List<ProgressBoxRow> boxes) {
-    final withData = boxes.where((b) => b.count > 0).toList()
-      ..sort((a, b) => a.box.compareTo(b.box));
-    return withData
-        .map((b) {
-          final idx = (b.box - 1).clamp(0, 4).toInt();
-          return (
-            label: 'Nível ${b.box} (${b.count})',
-            color: ProgressChartPalette.at(idx),
-          );
-        })
-        .toList();
+  Widget _buildBoxTiles(List<ProgressBoxRow> boxes) {
+    return Row(
+      children: List.generate(5, (i) {
+        final n = i + 1;
+        ProgressBoxRow? row;
+        for (final b in boxes) {
+          if (b.box == n) {
+            row = b;
+            break;
+          }
+        }
+        final count = row?.count ?? 0;
+        final color = ProgressChartPalette.at(i);
+        final isSelected = controller.selectedBoxNumber == n;
+        return Expanded(
+          child: GestureDetector(
+            onTap: () => controller.selectedBoxNumber = n,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: i < 4 ? const EdgeInsets.only(right: 6) : EdgeInsets.zero,
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
+              decoration: BoxDecoration(
+                color: isSelected ? color.withValues(alpha: 0.12) : Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isSelected ? color : AppColors.bordaCampo,
+                  width: isSelected ? 1.5 : 1,
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Caixa $n',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.lexend(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected ? color : AppColors.textoSecundario,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '$count',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.lexend(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: isSelected ? color : AppColors.textoAzul,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }),
+    );
   }
-
-  List<PieChartSectionData> _pieSections(List<ProgressBoxRow> boxes) {
-    final withData = boxes.where((b) => b.count > 0).toList();
-    if (withData.isEmpty) {
-      return const [];
-    }
-    return withData.map((b) {
-      final idx = (b.box - 1).clamp(0, 4).toInt();
-      final color = ProgressChartPalette.at(idx);
-      return PieChartSectionData(
-        color: color,
-        value: b.count.toDouble(),
-        showTitle: false,
-        radius: 52,
-      );
-    }).toList();
-  }
-
 }
 
 class _WordsByLevelColumns extends StatelessWidget {
@@ -541,7 +564,7 @@ class _WordsByLevelColumns extends StatelessWidget {
   Widget build(BuildContext context) {
     if (words.isEmpty) {
       return Text(
-        'Nenhuma palavra neste nível.',
+        'Nenhuma palavra nesta caixa.',
         style: GoogleFonts.lexend(fontSize: 13, color: AppColors.textoSecundario),
       );
     }
@@ -780,6 +803,22 @@ class _ModalitiesCard extends StatelessWidget {
   }
 }
 
+ThemesResponse _filterThemesResponse(ThemesResponse response, Set<String> visibleIds) {
+  if (!response.isGeneral || visibleIds.isEmpty) return response;
+  final filtered = response.generalRows.map((row) {
+    return ThemesGeneralRow(
+      period: row.period,
+      themes: row.themes.where((t) => visibleIds.contains(t.themeId)).toList(),
+    );
+  }).toList();
+  return ThemesResponse(
+    accuracy: response.accuracy,
+    isGeneral: true,
+    generalRows: filtered,
+    simpleRows: const [],
+  );
+}
+
 class _ThemesCard extends StatelessWidget {
   const _ThemesCard({required this.controller});
 
@@ -790,6 +829,7 @@ class _ThemesCard extends StatelessWidget {
     final monthLabel = formatPtMonthYear(controller.themesChartMonth);
     final themes = controller.themes;
     final acc = themes == null ? 0 : (themes.accuracy * 100).round();
+    final visibleIds = controller.visibleThemeIds;
 
     return _CardShell(
       title: 'Temas',
@@ -819,39 +859,40 @@ class _ThemesCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          DropdownButtonFormField<String?>(
-            value: controller.selectedThemeId,
-            decoration: InputDecoration(
-              labelText: 'Filtro',
-              labelStyle: GoogleFonts.lexend(fontSize: 12, color: AppColors.textoSecundario),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          if (controller.themeOptions.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: controller.themeOptions.map((o) {
+                  final selected = visibleIds.contains(o.id);
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: FilterChip(
+                      label: Text(o.label),
+                      selected: selected,
+                      onSelected: (_) => controller.toggleThemeVisibility(o.id),
+                      selectedColor: AppColors.primaria.withValues(alpha: 0.12),
+                      checkmarkColor: AppColors.primaria,
+                      labelStyle: GoogleFonts.lexend(
+                        fontSize: 12,
+                        color: selected ? AppColors.primaria : AppColors.textoPreto,
+                      ),
+                      side: BorderSide(
+                        color: selected ? AppColors.primaria : AppColors.bordaCampo,
+                      ),
+                      backgroundColor: AppColors.branco,
+                      showCheckmark: false,
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+                      visualDensity: VisualDensity.compact,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
-            items: [
-              DropdownMenuItem<String?>(
-                value: null,
-                child: Text('geral', style: GoogleFonts.lexend(fontSize: 14)),
-              ),
-              ...controller.themeOptions.map(
-                (o) => DropdownMenuItem<String?>(
-                  value: o.id,
-                  child: Text(
-                    o.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.lexend(fontSize: 14),
-                  ),
-                ),
-              ),
-            ],
-            onChanged: controller.isThemesLoading
-                ? null
-                : (v) {
-                    controller.setThemeFilter(v);
-                  },
-          ),
-          const SizedBox(height: 16),
+          ],
+          const SizedBox(height: 12),
           if (themes != null)
             Text(
               'Porcentagem de acertos: $acc%',
@@ -878,7 +919,10 @@ class _ThemesCard extends StatelessWidget {
               ),
             )
           else
-            ProgressBarCharts.themesChart(response: themes, height: 220),
+            ProgressBarCharts.themesChart(
+              response: _filterThemesResponse(themes, visibleIds),
+              height: 220,
+            ),
         ],
       ),
     );

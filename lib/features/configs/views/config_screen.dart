@@ -14,6 +14,9 @@ import 'package:plus_vocab/features/progress/views/my_progress_screen.dart';
 import 'package:provider/provider.dart';
 
 import '../../auth/controllers/auth_controller.dart';
+import '../../dicionario/controllers/dicionario_controller.dart';
+import '../../home/controllers/progress_home_controller.dart';
+import '../../temas/controllers/temas_controller.dart';
 
 class ConfigScreen extends StatefulWidget {
   const ConfigScreen({super.key});
@@ -55,6 +58,9 @@ class _ConfigScreenState extends State<ConfigScreen> {
     setState(() => _isLoggingOut = true);
 
     final authController = context.read<AuthController>();
+    context.read<TemasController>().limparCache();
+    context.read<DicionarioController>().limparCache();
+    context.read<ProgressHomeController>().limparCache();
 
     await authController.logOut();
 
