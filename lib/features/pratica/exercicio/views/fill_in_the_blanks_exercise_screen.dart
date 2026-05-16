@@ -136,7 +136,7 @@ class _FillInTheBlanksExerciseScreenState extends State<FillInTheBlanksExerciseS
               ),
               const SizedBox(height: 12),
               Text(
-                'Complete a lacuna na frase usando o campo abaixo e envie para correção. A resposta da lacula é a uma das palavras anteriormente vista nessa partida.',
+                'Leia a frase e as opções de grafia abaixo. Preencha o espaço em branco com a palavra ou expressão correta. Este exercício avalia seu vocabulário e conhecimento gramatical.',
                 style: GoogleFonts.lexend(fontSize: 14, color: AppColors.textoPreto, height: 1.4),
               ),
             ],

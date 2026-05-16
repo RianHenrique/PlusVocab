@@ -142,8 +142,9 @@ class _VocabularyMatchExerciseScreenState extends State<VocabularyMatchExerciseS
               ),
               const SizedBox(height: 12),
               Text(
-                'Toque em uma palavra e depois na definição correspondente para associar. '
-                'Envie quando todos os espaços estiverem preenchidos.',
+                'Associe cada palavra à sua definição ou tradução correspondente. '
+                'Toque ou arraste a palavra para sua definição correta. '
+                'Este exercício expande seu vocabulário em inglês.',
                 style: GoogleFonts.lexend(fontSize: 14, color: AppColors.textoPreto, height: 1.4),
               ),
             ],

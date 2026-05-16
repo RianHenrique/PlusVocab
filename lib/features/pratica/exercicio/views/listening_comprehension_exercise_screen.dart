@@ -156,7 +156,7 @@ class _ListeningComprehensionExerciseScreenState extends State<ListeningComprehe
               ),
               const SizedBox(height: 12),
               Text(
-                'Toque no ícone para ouvir o áudio. Em seguida escolha a alternativa correta para a pergunta na tela e envie.',
+                'Toque no ícone para ouvir o áudio. Depois selecione a alternativa que responde a pergunta escrita na tela. Este exercício avalia sua compreensão auditiva do inglês.',
                 style: GoogleFonts.lexend(fontSize: 14, color: AppColors.textoPreto, height: 1.4),
               ),
             ],

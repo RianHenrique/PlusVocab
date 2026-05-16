@@ -821,20 +821,21 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
       case PracticeExerciseModality.vocabMatch:
         _showInfoSheet(
           'Vocabulary Match',
-          'Toque em uma palavra e depois na definição correspondente para associar. '
-              'Use Próximo para registrar a correção deste exercício e avançar.',
+          'Associe cada palavra à sua definição ou tradução correspondente. '
+              'Toque ou arraste a palavra para sua definição correta. '
+              'Este exercício expande seu vocabulário em inglês.',
         );
         break;
       case PracticeExerciseModality.listeningComprehension:
         _showInfoSheet(
           'Listening Comprehension',
-          'Toque no ícone para ouvir o texto. Em seguida escolha a alternativa correta e avance.',
+          'Toque no ícone para ouvir o áudio. Depois selecione a alternativa que responde a pergunta escrita na tela. Este exercício avalia sua compreensão auditiva do inglês.',
         );
         break;
       case PracticeExerciseModality.fillBlanks:
         _showInfoSheet(
           'Fill in the Blanks',
-          'Complete a lacuna usando o campo abaixo. A resposta é comparada ao gabarito recebido do backend.',
+          'Leia a frase e as opções de grafia abaixo. Preencha o espaço em branco com a palavra ou expressão correta. Este exercício avalia seu vocabulário e conhecimento gramatical.',
         );
         break;
       case PracticeExerciseModality.dialogueCompletion:

@@ -4,9 +4,9 @@ abstract final class DialogueCompletionPracticeCopy {
 
   /// Texto exibido no sheet de informações da tela de prática.
   static const String infoSheetInstructions =
-      'Toque no ícone de som para ouvir cada opção de resposta do diálogo na tela. '
-      'Escute com atenção e repita no microfone em inglês a opção que considerar mais correta. '
-      'Segure o microfone para gravar e envie para correção.';
+      'Leia o cenário na tela e ouça cada fala do diálogo tocando no ícone de som. '
+      'Escolha a resposta mais adequada ao contexto e repita-a em voz alta no microfone. '
+      'Este exercício avalia sua compreensão oral e pronúncia em inglês.';
 }
 
 /// Escolhe um [localeId] instalado no dispositivo compatível com o idioma do exercício.
