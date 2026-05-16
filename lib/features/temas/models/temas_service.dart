@@ -20,6 +20,25 @@ class TemasService {
     }
   }
 
+  Future<String> validarTema({required String descricao}) async {
+    try {
+      final response = await _apiClient.post('/themes/validate', data: {
+        'description': descricao,
+      });
+      final body = response.data as Map<String, dynamic>;
+      if (body['valido'] != true) {
+        throw body['motivo']?.toString() ?? 'Tema inválido.';
+      }
+      return body['titulo'] as String;
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      if (data is Map<String, dynamic>) {
+        throw data['motivo'] ?? data['error'] ?? 'Tema inválido.';
+      }
+      throw 'Erro ao validar tema.';
+    }
+  }
+
   Future<Map<String, dynamic>> criarTema({
     required String nome,
     required String descricao,

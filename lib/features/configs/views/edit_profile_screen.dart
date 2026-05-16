@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:plus_vocab/core/common_models/user_profile.dart';
-import 'package:plus_vocab/core/services/storage_service.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/features/auth/controllers/auth_controller.dart';
 import 'package:plus_vocab/features/user/models/user_service.dart';
@@ -45,13 +44,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String _headerName = '';
 
   String _fluencyApi = 'intermediate';
-  bool _mostrarProximasPalavras = true;
-
   int _initialAge = 20;
   String _initialName = '';
   String _initialArea = '';
   String _initialFluency = 'intermediate';
-  bool _initialMostrarProximas = true;
 
   String? _userId;
 
@@ -87,14 +83,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
     _userId = userId;
 
-    final storage = context.read<StorageService>();
     final userService = context.read<UserService>();
-    final mostrar = await storage.getMostrarProximasPalavras();
-
-    setState(() {
-      _mostrarProximasPalavras = mostrar;
-      _initialMostrarProximas = mostrar;
-    });
 
     try {
       final payload = await userService.fetchUserById(userId);
@@ -191,11 +180,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       return;
     }
 
-    final storage = context.read<StorageService>();
     final userService = context.read<UserService>();
     final authController = context.read<AuthController>();
     final body = _montarBodyParcial();
-    final toggleMudou = _mostrarProximasPalavras != _initialMostrarProximas;
 
     if (body.isNotEmpty) {
       setState(() => _saving = true);
@@ -216,44 +203,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
     }
 
-    await storage.setMostrarProximasPalavras(_mostrarProximasPalavras);
     if (!mounted) return;
 
     if (body.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Perfil atualizado.', style: GoogleFonts.lexend())),
       );
-    } else if (toggleMudou) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Preferência salva.', style: GoogleFonts.lexend())),
-      );
     }
-    Navigator.of(context).pop(body.isNotEmpty || toggleMudou);
-  }
-
-  void _mostrarAjudaProximasPalavras() {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Mostrar próximas palavras', style: GoogleFonts.lexend(fontWeight: FontWeight.w600)),
-        content: Text(
-          'Quando ativado, o app pode exibir sugestões de vocabulário relacionado durante a prática. '
-          'A preferência fica salva neste aparelho.',
-          style: GoogleFonts.lexend(fontSize: 14, height: 1.4),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Entendi', style: GoogleFonts.lexend(color: AppColors.primaria)),
-          ),
-        ],
-      ),
-    );
+    Navigator.of(context).pop(body.isNotEmpty);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.branco,
       body: Stack(
         children: [
@@ -392,51 +355,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 22),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        'Mostrar próximas palavras?',
-                        style: GoogleFonts.lexend(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textoPreto,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                      icon: Icon(
-                        Icons.info_outline,
-                        size: 20,
-                        color: AppColors.primaria.withValues(alpha: 0.85),
-                      ),
-                      onPressed: _mostrarAjudaProximasPalavras,
-                    ),
-                  ],
-                ),
-              ),
-              Switch(
-                value: _mostrarProximasPalavras,
-                onChanged: (v) => setState(() => _mostrarProximasPalavras = v),
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                thumbColor: const WidgetStatePropertyAll<Color>(AppColors.branco),
-                trackColor: WidgetStateProperty.resolveWith((states) {
-                  if (states.contains(WidgetState.selected)) {
-                    return AppColors.primaria;
-                  }
-                  return null;
-                }),
               ),
             ],
           ),

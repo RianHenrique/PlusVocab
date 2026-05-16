@@ -71,9 +71,8 @@ class TemasController extends ChangeNotifier {
     }
   }
 
-  // Apenas cria o tema e retorna o id
-  Future<String?> criarTema({
-    required String nome,
+  // Valida a descrição e cria o tema; retorna id e título gerado pela IA.
+  Future<({String id, String titulo})?> criarTema({
     required String descricao,
     required List<String> modalidades,
   }) async {
@@ -82,13 +81,14 @@ class TemasController extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final titulo = await _temasService.validarTema(descricao: descricao);
       final tema = await _temasService.criarTema(
-        nome: nome,
+        nome: titulo,
         descricao: descricao,
         modalidades: modalidades,
       );
       invalidarListaTemasEmMemoria();
-      return tema['id'] as String;
+      return (id: tema['id'] as String, titulo: titulo);
     } catch (e) {
       _errorMessage = e.toString();
       return null;
@@ -144,9 +144,8 @@ class TemasController extends ChangeNotifier {
     }
   }
 
-  /// Cria o tema e inicia a sessão de prática na API (`POST /vocab/practice/v2/start`).
-  Future<({PracticeSessionPayload session, String themeId})?> criarTemaEIniciarPratica({
-    required String nome,
+  /// Valida, cria o tema e inicia a sessão de prática na API (`POST /vocab/practice/v2/start`).
+  Future<({PracticeSessionPayload session, String themeId, String titulo})?> criarTemaEIniciarPratica({
     required String descricao,
     required List<String> modalidades,
   }) async {
@@ -155,8 +154,9 @@ class TemasController extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final titulo = await _temasService.validarTema(descricao: descricao);
       final tema = await _temasService.criarTema(
-        nome: nome,
+        nome: titulo,
         descricao: descricao,
         modalidades: modalidades,
       );
@@ -165,7 +165,7 @@ class TemasController extends ChangeNotifier {
       final themeId = tema['id'] as String;
       final session = await _vocabPracticeService.iniciarSessao(themeId: themeId);
 
-      return (session: session, themeId: themeId);
+      return (session: session, themeId: themeId, titulo: titulo);
     } catch (e) {
       _errorMessage = e.toString();
       return null;

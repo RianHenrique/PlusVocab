@@ -3,6 +3,19 @@ plugins {
     id "kotlin-android"
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
+    id "com.google.gms.google-services"
+}
+
+dependencies {
+    // ... outras dependências do Flutter (não apague as que já estão lá!)
+
+    // 1. Importe o Firebase BoM
+    implementation platform('com.google.firebase:firebase-bom:34.13.0')
+
+    // 2. Adicione as bibliotecas que você vai usar
+    // Como estamos usando o BoM, NÃO precisa colocar a versão aqui (ex: :21.0.1)
+    implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-auth' // Necessário para o Google Sign-In
 }
 
 android {

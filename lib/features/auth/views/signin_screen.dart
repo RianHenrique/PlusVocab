@@ -92,6 +92,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
     // --- ESTRUTURA DO BUILD METHOD ATUALIZADA ---
     return Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: AppColors.fundoClaro,
         body: Stack(children: [
           SizedBox.expand(

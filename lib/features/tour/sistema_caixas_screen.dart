@@ -27,6 +27,7 @@ class SistemaCaixasScreen extends StatelessWidget {
     return PopScope(
       canPop: !fromOnboarding,
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: AppColors.fundoClaro,
         body: Stack(
           children: [

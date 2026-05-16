@@ -73,13 +73,13 @@ class HorizontalCalendar extends StatelessWidget {
       return s;
     }).toSet();
 
+    final days = List.generate(7, (index) => start.add(Duration(days: index)));
+
     return SizedBox(
       height: 86,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: 7,
-        itemBuilder: (context, index) {
-          final day = start.add(Duration(days: index));
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: days.map((day) {
           final key = _apiWeekdayKey(day);
           final isToday = _dateOnly(day) == today;
           final isActive = normalizedActive.contains(key);
@@ -118,7 +118,7 @@ class HorizontalCalendar extends StatelessWidget {
               ],
             ),
           );
-        },
+        }).toList(),
       ),
     );
   }

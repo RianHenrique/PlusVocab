@@ -23,7 +23,6 @@ class CriarTemaScreen extends StatefulWidget {
 class _CriarTemaScreenState extends State<CriarTemaScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  late final TextEditingController _tituloController;
   late final TextEditingController _contextoController;
   late final List<String> _selecionados;
   // String _nivelFluencia = "Básico"; // TODO: reativar quando backend suportar dificuldade por tema
@@ -49,7 +48,6 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
     "listening": "Listening Comprehension",
   };
 
-  static const int _limiteTitulo = 30;
   static const int _limiteDescricao = 240;
 
   static String _textoAte(String s, int max) {
@@ -61,7 +59,6 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
   void initState() {
     super.initState();
     final tema = widget.temaParaEditar;
-    _tituloController = TextEditingController(text: _textoAte(tema?.name ?? '', _limiteTitulo));
     _contextoController = TextEditingController(
       text: _textoAte(tema?.description ?? widget.contexto, _limiteDescricao),
     );
@@ -75,21 +72,11 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
 
   @override
   void dispose() {
-    _tituloController.dispose();
     _contextoController.dispose();
     super.dispose();
   }
 
   bool _validarCampos() {
-    final titulo = _tituloController.text.trim();
-    if (titulo.isEmpty) {
-      _mostrarErro('Informe o título do tema.');
-      return false;
-    }
-    if (titulo.length > _limiteTitulo) {
-      _mostrarErro('O título pode ter no máximo $_limiteTitulo caracteres.');
-      return false;
-    }
     final descricao = _contextoController.text.trim();
     if (descricao.isEmpty) {
       _mostrarErro('Informe o contexto da prática.');
@@ -103,7 +90,7 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
       _mostrarErro('Selecione ao menos uma modalidade.');
       return false;
     }
-  return true;
+    return true;
   }
 
   void _mostrarErro(String mensagem) {
@@ -117,22 +104,20 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
 
     final controller = context.read<TemasController>();
     final modalidades = _selecionados.map((m) => _modalidadeMap[m]!).toList();
-    final titulo = _tituloController.text.trim();
 
-    final themeId = await controller.criarTema(
-      nome: titulo,
+    final result = await controller.criarTema(
       descricao: _contextoController.text.trim(),
       modalidades: modalidades,
     );
 
     if (!mounted) return;
 
-    if (themeId != null) {
+    if (result != null) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(
           builder: (_) => PracticeSessionLoadingScreen(
-            themeId: themeId,
-            practiceTitle: titulo,
+            themeId: result.id,
+            practiceTitle: result.titulo,
           ),
         ),
       );
@@ -147,15 +132,14 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
     final controller = context.read<TemasController>();
     final modalidades = _selecionados.map((m) => _modalidadeMap[m]!).toList();
 
-    final themeId = await controller.criarTema(
-      nome: _tituloController.text.trim(),
+    final result = await controller.criarTema(
       descricao: _contextoController.text.trim(),
       modalidades: modalidades,
     );
 
     if (!mounted) return;
 
-    if (themeId != null) {
+    if (result != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Tema criado com sucesso!'), backgroundColor: AppColors.acerto),
       );
@@ -173,7 +157,7 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
 
     final ok = await controller.atualizarTema(
       id: widget.temaParaEditar!.id,
-      nome: _tituloController.text.trim(),
+      nome: widget.temaParaEditar!.name,
       descricao: _contextoController.text.trim(),
       modalidades: modalidades,
     );
@@ -195,6 +179,7 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
     final isLoading = context.watch<TemasController>().isLoading;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.fundoClaro,
       body: Stack(
         children: [
@@ -247,10 +232,6 @@ class _CriarTemaScreenState extends State<CriarTemaScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text("Título", style: GoogleFonts.lexend(fontSize: 12, color: AppColors.textoPreto)),
-                              const SizedBox(height: 8),
-                              _buildCampo(controller: _tituloController, maxLength: _limiteTitulo),
-                              const SizedBox(height: 16),
                               Text("Contexto da prática", style: GoogleFonts.lexend(fontSize: 12, color: AppColors.textoPreto)),
                               const SizedBox(height: 8),
                               _buildCampo(controller: _contextoController, maxLines: 3, maxLength: _limiteDescricao),

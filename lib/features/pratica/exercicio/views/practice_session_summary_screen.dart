@@ -150,6 +150,7 @@ class PracticeSessionSummaryScreen extends StatelessWidget {
         total == 0 ? 0 : ((outcome.totalCorretos / total) * 100).round();
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.branco,
       body: Stack(
         children: [

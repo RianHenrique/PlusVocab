@@ -1022,6 +1022,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
           canPop: false,
           child: Dialog.fullscreen(
             child: Scaffold(
+              resizeToAvoidBottomInset: false,
               backgroundColor: AppColors.branco,
               body: Stack(
                 children: [

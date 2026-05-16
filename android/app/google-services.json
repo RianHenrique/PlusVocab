@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "513254980783",
+    "project_id": "gen-lang-client-0278161260",
+    "storage_bucket": "gen-lang-client-0278161260.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:513254980783:android:f4006a6fda94184e25a85a",
+        "android_client_info": {
+          "package_name": "com.example.plus_vocab"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "513254980783-fsrpvql6mhnf8etbumh6s0voggckvche.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.plus_vocab",
+            "certificate_hash": "6c52fc666464b47ab910a954329b8994bd903f6c"
+          }
+        },
+        {
+          "client_id": "513254980783-irke0b91fslmdvhpg9q251k70uq6dbcm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.plus_vocab",
+            "certificate_hash": "5e79091b126be65c6d0064237ada35b80e88fc54"
+          }
+        },
+        {
+          "client_id": "513254980783-l67tque42u21kmill8med4n3maujus36.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB40ImKGhxg-gQlwprnTBHRsSCJpct6Icg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "513254980783-0mc882kqo0rdkhtc1qbr4fi3aal8h01o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

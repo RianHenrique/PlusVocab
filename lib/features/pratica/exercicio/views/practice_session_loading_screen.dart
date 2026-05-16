@@ -110,6 +110,7 @@ class _PracticeSessionLoadingScreenState extends State<PracticeSessionLoadingScr
     final theme = GoogleFonts.lexend();
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.branco,
       body: Stack(
         children: [

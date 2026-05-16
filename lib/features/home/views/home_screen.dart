@@ -183,6 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.fundoClaro,
       body: Stack(
         children: [
@@ -200,7 +201,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: SingleChildScrollView(
                 controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -1078,7 +1079,7 @@ class _FeaturedWordsStrip extends StatelessWidget {
             itemBuilder: (context, index) {
               final p = words[index];
               return Container(
-                width: 136,
+                width: 146,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: AppColors.branco,
@@ -1107,7 +1108,7 @@ class _FeaturedWordsStrip extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       p.word.text,
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.lexend(
                         fontSize: 17,

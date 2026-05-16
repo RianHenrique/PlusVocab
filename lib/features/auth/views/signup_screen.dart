@@ -73,6 +73,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     // --- ESTRUTURA DO BUILD METHOD ATUALIZADA ---
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.fundoClaro,
       body: Stack(
         children: [

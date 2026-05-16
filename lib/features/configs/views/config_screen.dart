@@ -97,6 +97,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
         : _displayNameFromEmail(email.isEmpty ? null : email);
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.branco,
       body: Stack(
         children: [

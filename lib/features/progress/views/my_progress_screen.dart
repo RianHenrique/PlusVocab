@@ -24,6 +24,7 @@ class MyProgressScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.fundoClaro,
       body: Stack(
         children: [

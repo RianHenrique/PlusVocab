@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-import 'package:plus_vocab/core/services/storage_service.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
 import 'package:plus_vocab/features/auth/controllers/auth_controller.dart';
 import 'package:plus_vocab/features/auth/views/signin_screen.dart';
@@ -33,7 +32,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _ageController = TextEditingController();
 
   String? _fluencyApi;
-  bool _mostrarProximasPalavras = true;
   bool _submitting = false;
 
   @override
@@ -42,29 +40,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _areaController.dispose();
     _ageController.dispose();
     super.dispose();
-  }
-
-  void _mostrarAjudaProximasPalavras() {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(
-          'Mostrar próximas palavras',
-          style: GoogleFonts.lexend(fontWeight: FontWeight.w600),
-        ),
-        content: Text(
-          'Quando ativado, o app pode exibir sugestões de vocabulário relacionado durante a prática. '
-          'A preferência fica salva neste aparelho.',
-          style: GoogleFonts.lexend(fontSize: 14, height: 1.4),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Entendi', style: GoogleFonts.lexend(color: AppColors.primaria)),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<void> _continuar() async {
@@ -107,7 +82,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final area = _areaController.text.trim();
 
     final userService = context.read<UserService>();
-    final storage = context.read<StorageService>();
 
     setState(() => _submitting = true);
     try {
@@ -120,7 +94,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       };
       final atualizado = await userService.updateProfile(userId, body);
       await auth.updateCachedUserProfile(atualizado);
-      await storage.setMostrarProximasPalavras(_mostrarProximasPalavras);
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const SistemaCaixasScreen()),
@@ -162,6 +135,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return PopScope(
       canPop: false,
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: AppColors.fundoClaro,
         body: Stack(
           children: [
@@ -302,51 +276,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 18),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        'Mostrar próximas palavras?',
-                                        style: GoogleFonts.lexend(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
-                                          color: AppColors.textoPreto,
-                                        ),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      visualDensity: VisualDensity.compact,
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                      icon: Icon(
-                                        Icons.info_outline,
-                                        size: 20,
-                                        color: AppColors.primaria.withValues(alpha: 0.85),
-                                      ),
-                                      onPressed: _mostrarAjudaProximasPalavras,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Switch(
-                                value: _mostrarProximasPalavras,
-                                onChanged: (v) => setState(() => _mostrarProximasPalavras = v),
-                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                thumbColor: const WidgetStatePropertyAll<Color>(AppColors.branco),
-                                trackColor: WidgetStateProperty.resolveWith((states) {
-                                  if (states.contains(WidgetState.selected)) {
-                                    return AppColors.primaria;
-                                  }
-                                  return null;
-                                }),
-                              ),
-                            ],
                           ),
                           const SizedBox(height: 28),
                           SizedBox(

@@ -48,7 +48,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   Widget build(BuildContext context) {
     final isLast = _currentPage == _slides.length - 1;
 
-    return Scaffold(
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+      child: Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.branco,
       body: Stack(
         children: [
@@ -113,7 +116,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               child: Text(
                                 'Pular',
                                 style: GoogleFonts.lexend(
-                                  fontSize: 16,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.erro,
                                 ),
@@ -139,7 +142,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                   Text(
                                     slide.title,
                                     style: GoogleFonts.lexend(
-                                      fontSize: 26,
+                                      fontSize: 22,
                                       fontWeight: FontWeight.bold,
                                       color: AppColors.textoAzul,
                                       height: 1.25,
@@ -149,7 +152,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                   Text(
                                     slide.body,
                                     style: GoogleFonts.lexend(
-                                      fontSize: 16,
+                                      fontSize: 14,
                                       color: AppColors.textoSecundario,
                                       height: 1.5,
                                     ),
@@ -184,7 +187,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                         child: Text(
                                           'Começar',
                                           style: GoogleFonts.lexend(
-                                            fontSize: 16,
+                                            fontSize: 14,
                                             fontWeight: FontWeight.w600,
                                             color: AppColors.branco,
                                           ),
@@ -208,9 +211,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 }
+
 
 class _Dots extends StatelessWidget {
   const _Dots({super.key, required this.count, required this.current});

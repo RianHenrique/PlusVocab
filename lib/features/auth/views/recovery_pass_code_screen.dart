@@ -61,6 +61,7 @@ class _RecoveryPassCodeScreenState extends State<RecoveryPassCodeScreen> {
     final String? errorMessage = authState.errorMessage;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.fundoClaro,
       body: Stack(
         children: [

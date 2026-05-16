@@ -114,6 +114,7 @@ class _TemasScreenState extends State<TemasScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.branco,
       floatingActionButton: FloatingActionButton(
         onPressed: () async {

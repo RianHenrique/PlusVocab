@@ -123,6 +123,7 @@ class _RankingWeekScreenState extends State<RankingWeekScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppColors.fundoClaro,
       body: Stack(
         children: [
