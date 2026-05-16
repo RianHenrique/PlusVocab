@@ -126,6 +126,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
   final Map<int, VocabularyMatchQuestion> _vocabularyQuestionByIndex = {};
   final Map<int, ListeningComprehensionQuestion> _listeningQuestionByIndex = {};
   final Map<int, DialogueCompletionQuestion> _dialogueQuestionByIndex = {};
+  final Map<int, FillInTheBlanksQuestion> _fillBlanksQuestionByIndex = {};
 
   final stt.SpeechToText _dialogueSpeech = stt.SpeechToText();
   bool _dialogueSpeechReady = false;
@@ -164,6 +165,14 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
     return _dialogueQuestionByIndex.putIfAbsent(
       index,
       () => PracticeSessionExerciseAdapters.dialogueCompletionFromItem(
+          _session.exercicios[index]),
+    );
+  }
+
+  FillInTheBlanksQuestion _fillBlanksQuestionForIndex(int index) {
+    return _fillBlanksQuestionByIndex.putIfAbsent(
+      index,
+      () => PracticeSessionExerciseAdapters.fillBlanksFromItem(
           _session.exercicios[index]),
     );
   }
@@ -1351,7 +1360,7 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
 
       case PracticeExerciseModality.fillBlanks:
         try {
-          final q = PracticeSessionExerciseAdapters.fillBlanksFromItem(item);
+          final q = _fillBlanksQuestionForIndex(_currentIndex);
           return FillInTheBlanksPracticeBody(
             textBeforeBlank: q.textBeforeBlank,
             textAfterBlank: q.textAfterBlank,
