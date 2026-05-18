@@ -70,7 +70,10 @@ abstract final class PracticeFeedbackContentBuilder {
     required DialogueCompletionQuestion question,
     required String userTranscript,
   }) {
-    final accepted = question.acceptedAnswers
+    final source = question.displayAnswers.isNotEmpty
+        ? question.displayAnswers
+        : question.acceptedAnswers;
+    final accepted = source
         .map((e) => e.trim())
         .where((e) => e.isNotEmpty)
         .toList();

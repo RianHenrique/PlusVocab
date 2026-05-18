@@ -116,7 +116,11 @@ abstract final class PracticeSessionExerciseAdapters {
   /// “ocultas”); [gabarito] e/ou [palavras_chave] = respostas aceitas na fala (várias frases
   /// separadas por `|`, `;` ou quebra de linha em [gabarito]).
   static DialogueCompletionQuestion dialogueCompletionFromItem(
-      PracticeExerciseItem item) {
+    PracticeExerciseItem item, {
+    required String practiceSessionId,
+    required int exerciseIndex,
+    Random? random,
+  }) {
     var promptLine = item.questao?.trim() ?? '';
     if (promptLine.isEmpty) {
       promptLine = item.text?.trim() ?? '';
@@ -134,11 +138,16 @@ abstract final class PracticeSessionExerciseAdapters {
       );
     }
 
+    final rnd =
+        random ?? Random(stableShuffleSeed(practiceSessionId, exerciseIndex));
+    obscuredLineAudios = List<String>.from(obscuredLineAudios)..shuffle(rnd);
+
     final acceptedAnswers = <String>[];
     final gabarito = item.gabarito?.trim() ?? '';
     if (gabarito.isNotEmpty) {
       acceptedAnswers.addAll(_splitAcceptedPhrases(gabarito));
     }
+    final displayAnswers = List<String>.from(acceptedAnswers);
     for (final p in item.palavrasChave) {
       final t = p.trim();
       if (t.isEmpty) continue;
@@ -159,6 +168,7 @@ abstract final class PracticeSessionExerciseAdapters {
       promptLine: promptLine,
       obscuredLineAudios: obscuredLineAudios,
       acceptedAnswers: acceptedAnswers,
+      displayAnswers: displayAnswers,
       ttsLanguage: 'en-US',
     );
   }

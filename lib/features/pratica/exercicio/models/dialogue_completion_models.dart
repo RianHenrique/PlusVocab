@@ -2,7 +2,7 @@
 abstract final class DialogueCompletionPracticeCopy {
   DialogueCompletionPracticeCopy._();
 
-  /// Texto exibido no sheet de informações da tela de prática.
+  /// Texto exiido no sheet de informações da tela de prática.
   static const String infoSheetInstructions =
       'Leia o cenário na tela e ouça cada fala do diálogo tocando no ícone de som. '
       'Escolha a resposta mais adequada ao contexto e repita-a em voz alta no microfone. '
@@ -38,6 +38,7 @@ class DialogueCompletionQuestion {
     required this.promptLine,
     required this.obscuredLineAudios,
     required this.acceptedAnswers,
+    this.displayAnswers = const [],
     this.ttsLanguage = 'en-US',
   });
 
@@ -49,6 +50,10 @@ class DialogueCompletionQuestion {
 
   /// Respostas aceitas após normalização (vindas do backend).
   final List<String> acceptedAnswers;
+
+  /// Frases do gabarito a exibir no modal de correção (sem palavras-chave isoladas).
+  /// Se vazio, usa [acceptedAnswers] como fallback.
+  final List<String> displayAnswers;
 
   /// Idioma do TTS / reconhecimento (ex.: en-US, pt-BR).
   final String ttsLanguage;
@@ -68,6 +73,13 @@ class DialogueCompletionQuestion {
         "We're still deciding, one more minute please.",
       ],
       acceptedAnswers: [
+        "i'd like the grilled salmon please",
+        'i would like the grilled salmon please',
+        "i'll have the grilled salmon",
+        'grilled salmon please',
+        'i want the grilled salmon',
+      ],
+      displayAnswers: [
         "i'd like the grilled salmon please",
         'i would like the grilled salmon please',
         "i'll have the grilled salmon",

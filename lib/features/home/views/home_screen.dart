@@ -889,7 +889,7 @@ class _FeaturedTemasStrip extends StatelessWidget {
         final featured = _ordered(temas);
 
         return SizedBox(
-          height: 120,
+          height: 130,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: featured.length,

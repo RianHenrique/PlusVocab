@@ -165,7 +165,10 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
     return _dialogueQuestionByIndex.putIfAbsent(
       index,
       () => PracticeSessionExerciseAdapters.dialogueCompletionFromItem(
-          _session.exercicios[index]),
+        _session.exercicios[index],
+        practiceSessionId: _session.practiceSessionId,
+        exerciseIndex: index,
+      ),
     );
   }
 
@@ -439,7 +442,11 @@ class _PracticeSessionScreenState extends State<PracticeSessionScreen> {
           case PracticeExerciseModality.fillBlanks:
             PracticeSessionExerciseAdapters.fillBlanksFromItem(item);
           case PracticeExerciseModality.dialogueCompletion:
-            PracticeSessionExerciseAdapters.dialogueCompletionFromItem(item);
+            PracticeSessionExerciseAdapters.dialogueCompletionFromItem(
+              item,
+              practiceSessionId: _session.practiceSessionId,
+              exerciseIndex: i,
+            );
           default:
             break;
         }
