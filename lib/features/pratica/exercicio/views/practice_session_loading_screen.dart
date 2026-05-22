@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:plus_vocab/core/theme/app_colors.dart';
-import 'package:plus_vocab/features/dicionario/controllers/dicionario_controller.dart';
 import 'package:plus_vocab/features/pratica/exercicio/data/vocab_practice_service.dart';
 import 'package:plus_vocab/features/pratica/exercicio/views/practice_session_screen.dart';
 import 'package:provider/provider.dart';
@@ -37,6 +36,8 @@ class _PracticeSessionLoadingScreenState extends State<PracticeSessionLoadingScr
     super.initState();
     _phrases = [
       'Você sabia que revisar vocabulário em contexto ajuda a fixar melhor o significado das palavras?',
+      "Você pode editar seus temas salvos e torná-los mais específicos a qualquer momento no menu 'Meus Temas'",
+      'Quer evitar certas palavras? Basta dizer à IA no contexto quais ela não deve usar como foco.',
       'Enquanto espera, lembre-se: consistência diária supera uma sessão longa e irregular.',
       'Nossa IA está elaborando exercícios personalizados com base no seu tema.',
     ];
@@ -48,29 +49,10 @@ class _PracticeSessionLoadingScreenState extends State<PracticeSessionLoadingScr
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _carregarSessao();
-      _injetarFraseDicionario();
     });
   }
 
-  Future<void> _injetarFraseDicionario() async {
-    final ctrl = context.read<DicionarioController>();
-    await ctrl.carregarSeNecessario();
-    if (!mounted) return;
-
-    final ativas = ctrl.palavras.where((p) => p.active).toList();
-    if (ativas.isEmpty) return;
-
-    ativas.sort((a, b) => a.boxLevel.compareTo(b.boxLevel));
-    final dificeis = ativas.take(3).map((p) => p.word.text).toList();
-    final listagem = dificeis.map((w) => '"$w"').join(', ');
-
-    setState(() {
-      _phrases = List<String>.from(_phrases)
-        ..insert(1, 'Palavras do seu dicionário que precisam de atenção: $listagem.');
-    });
-  }
-
-  Future<void> _carregarSessao() async {
+Future<void> _carregarSessao() async {
     try {
       final service = context.read<VocabPracticeService>();
       final session = await service.iniciarSessao(themeId: widget.themeId);
