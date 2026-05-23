@@ -254,7 +254,7 @@ class _TemasScreenState extends State<TemasScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Seus temas',
+            'Meus temas',
             style: GoogleFonts.lexend(
               fontSize: 28,
               fontWeight: FontWeight.w700,
@@ -430,15 +430,9 @@ class _TemaCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  // Indicadores mocados
-                  Row(
-                    children: [
-                      Text('2 dias atrás', style: GoogleFonts.lexend(fontSize: 11, color: AppColors.textoSecundario)),
-                      _bullet(),
-                      Text('0 partidas', style: GoogleFonts.lexend(fontSize: 11, color: AppColors.textoSecundario)),
-                      _bullet(),
-                      Text('0% de acerto', style: GoogleFonts.lexend(fontSize: 11, color: AppColors.textoSecundario)),
-                    ],
+                  Text(
+                    _formatarData(tema.createdAt),
+                    style: GoogleFonts.lexend(fontSize: 11, color: AppColors.textoSecundario),
                   ),
                 ],
               ),
@@ -463,10 +457,17 @@ class _TemaCard extends StatelessWidget {
     );
   }
 
-  Widget _bullet() => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 5),
-    child: Text('•', style: TextStyle(fontSize: 10, color: AppColors.textoSecundario)),
-  );
+  String _formatarData(String createdAt) {
+    if (createdAt.isEmpty) return '';
+    try {
+      final dt = DateTime.parse(createdAt);
+      final d = dt.day.toString().padLeft(2, '0');
+      final m = dt.month.toString().padLeft(2, '0');
+      return '$d/$m/${dt.year}';
+    } catch (_) {
+      return '';
+    }
+  }
 }
 
 class _ActionIcon extends StatelessWidget {

@@ -7,13 +7,15 @@ import '../../../core/common_models/user_model.dart';
 import '../../../core/common_models/user_profile.dart';
 import '../../../core/services/storage_service.dart';
 import '../../temas/models/tema_resumo.dart';
+import '../../user/models/user_service.dart';
 import '../models/auth_service.dart';
 import '../models/authenticated_session.dart';
 
 class AuthController extends ChangeNotifier {
   final AuthService _authService;
+  final UserService _userService;
 
-  AuthController(this._authService);
+  AuthController(this._authService, this._userService);
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -243,6 +245,18 @@ class AuthController extends ChangeNotifier {
 
         final session = await _authService.authGoogle(serverAuthCode: serverAuthCode);
         _applySession(session);
+
+        if (_currentUser != null) {
+          try {
+            final payload = await _userService.fetchUserById(_currentUser!.id);
+            if (payload.profile != null) {
+              await updateCachedUserProfile(payload.profile!);
+            }
+          } catch (e) {
+            debugPrint('Aviso: não foi possível carregar perfil após login Google: $e');
+          }
+        }
+
         debugPrint('Usuário logado com sucesso via Google: $_currentUser');
       } else {
         _errorMessage = 'Não foi possível obter as credenciais do Google. Tente novamente.';

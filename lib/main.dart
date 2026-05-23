@@ -83,7 +83,7 @@ void main() async {
 
         // --- NÍVEL DE CONTROLLER ("C") ---
         ChangeNotifierProvider(
-          create: (context) => AuthController(context.read<AuthService>()),
+          create: (context) => AuthController(context.read<AuthService>(), context.read<UserService>()),
         ),
         ChangeNotifierProvider(
           create: (context) => TemasController(
