@@ -62,10 +62,5 @@
 	</array>
 	<key>GIDClientID</key>
 	<string>513254980783-ip48dqe9ueankjumebrkdh2bd73qpi2c.apps.googleusercontent.com</string>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>google</string>
-		<string>com.googleusercontent.apps</string>
-	</array>
 </dict>
 </plist>

@@ -224,6 +224,7 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
 
     final GoogleSignIn googleSignIn = GoogleSignIn(
+      clientId: "513254980783-ip48dqe9ueankjumebrkdh2bd73qpi2c.apps.googleusercontent.com",
       serverClientId: "513254980783-0mc882kqo0rdkhtc1qbr4fi3aal8h01o.apps.googleusercontent.com",
       scopes: ['email', 'profile'],
     );
